@@ -13,6 +13,6 @@ def queryTower(lac, cell_id):
     Session = sessionmaker(bind=engine)
     session = Session()
 
-    result_list = session.query(Tower).filter_by(area=224, cell=36201).all()
+    result_list = session.query(Tower).filter_by(area=lac, cell=cell_id).all()
 
     return result_list
