@@ -1,8 +1,7 @@
 # Python #
 *.pyc
 */*.pyc
-# Created by https://www.gitignore.io/api/windows,osx,linux,pycharm
-
+*/.pyc
 ### Windows ###
 # Windows image file caches
 Thumbs.db
