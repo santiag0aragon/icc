@@ -415,10 +415,10 @@ if __name__ == '__main__':
 
 
 # Tower Information Consistency Check
-                print 'ENtering Tower Information Consistency check...'
-                if len(found_list) > 0 and options.no_TIC:
-                    print 'Tower Information Consistency check...'
-                    tic(found_list, info, options.verbose)
+                #print 'ENtering Tower Information Consistency check...'
+                if len(found_list) > 0 and not options.no_TIC:
+                #    print 'Tower Information Consistency check...'
+                    tic.tic(found_list, info, options.verbose)
                 #     print("Printing cell tower info and checking database....")
                 #     for info in sorted(found_list):
                 #         print info
