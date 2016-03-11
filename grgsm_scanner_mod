@@ -313,7 +313,7 @@ if __name__ == '__main__':
         help="Set device arguments [default=%default]")
     parser.add_option("--speed", dest="speed", type="intx", default=4,
         help="Scan speed [default=%default]. Value range 0-5.")
-    parser.add_option("--no-TIC", dest="no_tic", type=boolean, default=False, help="Disable the tower information consistency checks.")
+    parser.add_option("--no_TIC", action="store_true", default=False, help="Disable the tower information consistency checks.")
     parser.add_option("-v", "--verbose", action="store_true",
                       help="If set, verbose information output is printed: ccch configuration, cell ARFCN's, neighbor ARFCN's")
 
@@ -323,8 +323,9 @@ if __name__ == '__main__':
 
     (options, args) = parser.parse_args()
 
-    if options.band not in grgsm.arfcn.get_bands():
-        parser.error("Invalid GSM band\n")
+    if options.band is not "900M-Bands":
+        if options.band not in grgsm.arfcn.get_bands():
+            parser.error("Invalid GSM band\n")
 
     if options.speed < 0 or options.speed > 5:
         parser.error("Invalid scan speed.\n")
@@ -411,7 +412,7 @@ if __name__ == '__main__':
 
 # Tower Information Consistency Check
 
-                if len(found_list) > 0 and options.no_tic:
+                if len(found_list) > 0 and options.no_TIC:
                     tic(found_list, info, options.verbose)
                 #     print("Printing cell tower info and checking database....")
                 #     for info in sorted(found_list):
