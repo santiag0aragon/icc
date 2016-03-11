@@ -345,9 +345,13 @@ if __name__ == '__main__':
                     ]
     else:
         to_scan = [options.band]
+
+    print "GSM bands to be scanned:\n"
+    print "\n".join(to_scan)    
+    
     for band in to_scan:
         options.band = band
-        print "Scanning band: %s"% band
+        print "\nScanning band: %s"% band
 
 
         first_arfcn = grgsm.arfcn.get_first_arfcn(options.band)
@@ -411,8 +415,9 @@ if __name__ == '__main__':
 
 
 # Tower Information Consistency Check
-
+                print 'ENtering Tower Information Consistency check...'
                 if len(found_list) > 0 and options.no_TIC:
+                    print 'Tower Information Consistency check...'
                     tic(found_list, info, options.verbose)
                 #     print("Printing cell tower info and checking database....")
                 #     for info in sorted(found_list):
