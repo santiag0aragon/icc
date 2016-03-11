@@ -347,12 +347,12 @@ if __name__ == '__main__':
         to_scan = [options.band]
 
     print "GSM bands to be scanned:\n"
-    print "\n".join(to_scan)
+    print "\n\t".join(to_scan)
 
     # Detection methods to be used
     print "\nDetection Methods to be used:"
     if not options.no_TIC:
-        print "Tower Information Consistency Check"
+        print "\tTower Information Consistency Check"
 
 
 
