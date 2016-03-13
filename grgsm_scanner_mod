@@ -38,7 +38,7 @@ import pmt
 import time
 
 import database.query_cell_tower as CellTower
-
+import src.det_methods.tic as tic
 
 #from wideband_receiver import *
 
@@ -301,7 +301,7 @@ class channel_info(object):
 if __name__ == '__main__':
     parser = OptionParser(option_class=eng_option, usage="%prog: [options]")
     bands_list = ", ".join(grgsm.arfcn.get_bands())
-    parser.add_option("-b", "--band", dest="band", default="P-GSM",
+    parser.add_option("-b", "--band", dest="band", default="900M-Bands",
                       help="Specify the GSM band for the frequency.\nAvailable bands are: " + bands_list)
     parser.add_option("-s", "--samp-rate", dest="samp_rate", type="float", default=2e6,
         help="Set sample rate [default=%default] - allowed values even_number*0.2e6")
@@ -313,8 +313,9 @@ if __name__ == '__main__':
         help="Set device arguments [default=%default]")
     parser.add_option("--speed", dest="speed", type="intx", default=4,
         help="Scan speed [default=%default]. Value range 0-5.")
+    parser.add_option("--no-TIC", dest="no_tic", type=boolean, default=False, help="Disable the tower information consistency checks.")
     parser.add_option("-v", "--verbose", action="store_true",
-                      help="If set, verbose information output is printed: ccch configuration, cell ARFCN's, neighbour ARFCN's")
+                      help="If set, verbose information output is printed: ccch configuration, cell ARFCN's, neighbor ARFCN's")
 
     """
         Dont forget: sudo sysctl kernel.shmmni=32000
@@ -331,17 +332,18 @@ if __name__ == '__main__':
     if (options.samp_rate / 0.2e6) % 2 != 0:
         parser.error("Invalid sample rate. Sample rate must be an even numer * 0.2e6")
     channels_num = int(options.samp_rate/0.2e6)
-    to_scan = grgsm.arfcn.get_bands()
-    to_scan = ['P-GSM',
-               'E-GSM',
-               'R-GSM',
-               #'GSM450',
-               #'GSM480',
-               #'GSM850',  Nothing found
-               #'DCS1800', #BTS found with kal
-               #'PCS1900', #Nothing interesting
-
-               ]
+    if options.band is "900M-Bands":
+        to_scan = ['P-GSM',
+                   'E-GSM',
+                   'R-GSM',
+                   #'GSM450',
+                   #'GSM480',
+                   #'GSM850',  Nothing found
+                   #'DCS1800', #BTS found with kal
+                   #'PCS1900', #Nothing interesting
+                    ]
+    else:
+        to_scan = [options.band]
     for band in to_scan:
         options.band = band
         print "Scanning band: %s"% band
@@ -406,20 +408,23 @@ if __name__ == '__main__':
                     info = channel_info(grgsm.arfcn.downlink2arfcn(found_freqs[i], options.band), found_freqs[i], cell_ids[i], lacs[i], mccs[i], mncs[i], ccch_confs[i], powers[i], neighbour_list, cell_arfcn_list)
                     found_list.append(info)
 
-                if len(found_list) > 0:
-                    print("Printing cell tower info and checking database....")
-                    for info in sorted(found_list):
-                        print info
-                        if options.verbose:
-                            print info.get_verbose_info()
 
-                        nr_of_hits = len(CellTower.queryTower(info.lac, info.cid))
-                        if nr_of_hits > 0:
-                            print(" Cell tower found in database, " + str(nr_of_hits) + " matches")
-                        else:
-                            print(" No match found in database")
-                else:
-                    print("No cell towers found...")
+# Tower Information Consistency Check
+
+                if len(found_list) > 0 and options.no_tic:
+                    tic(found_list, info, options.verbose)
+                #     print("Printing cell tower info and checking database....")
+                #     for info in sorted(found_list):
+                #         print info
+                #         if options.verbose:
+                #             print info.get_verbose_info()
+                #         nr_of_hits = len(CellTower.queryTower(info.lac, info.cid))
+                #         if nr_of_hits > 0:
+                #             print(" Cell tower found in database, " + str(nr_of_hits) + " matches")
+                #         else:
+                #             print(" No match found in database")
+                # else:
+                #     print("No cell towers found...")
 
             scanner = None
             current_freq += channels_num * 0.2e6
