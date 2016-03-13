@@ -38,7 +38,7 @@ import pmt
 import time
 
 import src.det_methods.tic as tic
-import aux.ch_info as ch_info
+import src.aux.ch_info as ch_info
 
 #from wideband_receiver import *
 
@@ -371,7 +371,7 @@ if __name__ == '__main__':
         stop_freq = last_freq + 0.2e6 * channels_num
 
         while current_freq < stop_freq:
-
+            #print 'Scanning %s Hz'%current_freq
             # silence rtl_sdr output:
             # open 2 fds
             null_fds = [os.open(os.devnull, os.O_RDWR) for x in xrange(2)]
@@ -425,6 +425,5 @@ if __name__ == '__main__':
 # Tower Information Consistency Check
                 if len(found_list) > 0 and not options.no_TIC:
                     tic.tic(found_list, info, options.verbose)
-
             scanner = None
             current_freq += channels_num * 0.2e6
