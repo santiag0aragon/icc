@@ -352,7 +352,7 @@ if __name__ == '__main__':
 
     # Detection methods to be used
     print "Detection Methods to be used:"
-    if !options.no_TIC:
+    if not options.no_TIC:
         print "Tower Information Consistency Check"
 
 
