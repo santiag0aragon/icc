@@ -313,10 +313,11 @@ if __name__ == '__main__':
         help="Set device arguments [default=%default]")
     parser.add_option("--speed", dest="speed", type="intx", default=4,
         help="Scan speed [default=%default]. Value range 0-5.")
-    parser.add_option("--no_TIC", action="store_true", default=False, help="Disable the tower information consistency checks.")
     parser.add_option("-v", "--verbose", action="store_true",
                       help="If set, verbose information output is printed: ccch configuration, cell ARFCN's, neighbor ARFCN's")
-
+# Detection methods #
+    parser.add_option("--no_TIC", action="store_true", default=False, help="Disable the tower information consistency checks.")
+#####################
     """
         Dont forget: sudo sysctl kernel.shmmni=32000
     """
@@ -347,8 +348,15 @@ if __name__ == '__main__':
         to_scan = [options.band]
 
     print "GSM bands to be scanned:\n"
-    print "\n".join(to_scan)    
-    
+    print "\n".join(to_scan)
+
+    # Detection methods to be used
+    print "Detection Methods to be used:"
+    if !options.no_TIC:
+        print "Tower Information Consistency Check"
+
+
+
     for band in to_scan:
         options.band = band
         print "\nScanning band: %s"% band
