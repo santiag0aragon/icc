@@ -38,6 +38,7 @@ import pmt
 import time
 
 import src.det_methods.tic as tic
+import src.det_methods.neighbours as neigbours
 
 #from wideband_receiver import *
 
@@ -316,6 +317,7 @@ if __name__ == '__main__':
                       help="If set, verbose information output is printed: ccch configuration, cell ARFCN's, neighbor ARFCN's")
 # Detection methods #
     parser.add_option("--no_TIC", action="store_true", default=False, help="Disable the tower information consistency checks.")
+    parser.add_option("--no_neighbours", action="store_true", default=False, help="Disable the neighbours consistency checks.")
 #####################
     """
         Dont forget: sudo sysctl kernel.shmmni=32000
@@ -353,7 +355,8 @@ if __name__ == '__main__':
     print "\nDetection Methods to be used:"
     if not options.no_TIC:
         print "\tTower Information Consistency Check"
-
+    if not options.no_neighbours:
+        print "\tNeighbour Consistency Check"
 
 
     for band in to_scan:
@@ -420,24 +423,13 @@ if __name__ == '__main__':
                     info = channel_info(grgsm.arfcn.downlink2arfcn(found_freqs[i], options.band), found_freqs[i], cell_ids[i], lacs[i], mccs[i], mncs[i], ccch_confs[i], powers[i], neighbour_list, cell_arfcn_list)
                     found_list.append(info)
 
-
-# Tower Information Consistency Check
-                #print 'ENtering Tower Information Consistency check...'
-                if len(found_list) > 0 and not options.no_TIC:
-                #    print 'Tower Information Consistency check...'
-                    tic.tic(found_list, info, options.verbose)
-                #     print("Printing cell tower info and checking database....")
-                #     for info in sorted(found_list):
-                #         print info
-                #         if options.verbose:
-                #             print info.get_verbose_info()
-                #         nr_of_hits = len(CellTower.queryTower(info.lac, info.cid))
-                #         if nr_of_hits > 0:
-                #             print(" Cell tower found in database, " + str(nr_of_hits) + " matches")
-                #         else:
-                #             print(" No match found in database")
-                # else:
-                #     print("No cell towers found...")
+# Detection methods #
+                if len(found_list) > 0:
+                    if not options.no_TIC:
+                        tic.tic(found_list, info, options.verbose)
+                    if not options.no_neighbours:
+                        neigbours.neighbours(found_list, info, options.verbose)
+#####################
 
             scanner = None
             current_freq += channels_num * 0.2e6
