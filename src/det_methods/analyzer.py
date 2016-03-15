@@ -17,12 +17,12 @@ import sys
 """
 Block that analyses a specific cell tower ARFCN for a specified amount of time.
 Stores the capture in cfile format, and stores the bursts(frames)
-Sends the decoded stuff to an udp port if specified
+Sends the decoded stuff to all ports in the udp port list
 """
 
 class analyzer(gr.top_block):
 
-    def __init__(self, fc, gain, samp_rate, ppm, arfcn, capture_id, udp_port=None, store_capture=True, verbose=False, band=None, rec_length=None, args=""):
+    def __init__(self, fc, gain, samp_rate, ppm, arfcn, capture_id, udp_ports=[], store_capture=True, verbose=False, band=None, rec_length=None, args=""):
         """
         capture_id = identifier for the capture used to store the files (e.g. <capture_id>.cfile)
         store_capture = boolean indicating if the capture should be stored on disk or not
@@ -44,7 +44,7 @@ class analyzer(gr.top_block):
         self.rec_length = rec_length
         self.store_capture = store_capture
         self.capture_id = capture_id
-        self.udp_port = udp_port
+        self.udp_ports = udp_ports
         self.verbose = verbose
 
         ##################################################
@@ -85,11 +85,13 @@ class analyzer(gr.top_block):
 #        self.blocks_socket_pdu_0 = blocks.socket_pdu("UDP_CLIENT", "127.0.0.1", "4729", 10000, False)#        self.blocks_socket_pdu_0 = blocks.socket_pdu("UDP_CLIENT", "127.0.0.1", "4729", 10000, False)
 
         #UDP client that sends all decoded C0T0 packets to the specified port on localhost if requested
-        if not udp_port is None:
+        self.client_sockets = []
+        self.server_sockets = []
+        for udp_port in self.udp_ports:
             #The server is for testing only
             #WARNING remove the server if you want connect to a different one
-            self.blocks_socket_pdu_0_0 = blocks.socket_pdu("UDP_SERVER", "127.0.0.1", str(self.udp_port), 10000)
-            self.blocks_socket_pdu_0 = blocks.socket_pdu("UDP_CLIENT", "127.0.0.1", str(self.udp_port), 10000)
+            self.server_sockets.append(blocks.socket_pdu("UDP_SERVER", "127.0.0.1", str(udp_port), 10000))
+            self.client_sockets.append(blocks.socket_pdu("UDP_CLIENT", "127.0.0.1", str(udp_port), 10000))
 
         #Sinks to store the capture file if requested
         if self.store_capture:
@@ -131,9 +133,9 @@ class analyzer(gr.top_block):
         self.msg_connect((self.gsm_receiver, 'C0'), (self.gsm_bcch_ccch_demapper_0, 'bursts'))
         self.msg_connect((self.gsm_bcch_ccch_demapper_0, 'bursts'), (self.gsm_control_channels_decoder_0, 'bursts'))
 
-        #Connect the UDP client if requested
-        if not self.udp_port is None:
-            self.msg_connect((self.gsm_control_channels_decoder_0, 'msgs'), (self.blocks_socket_pdu_0, 'pdus'))
+        #Connect the UDP clients if requested
+        for client_socket in self.client_sockets:
+            self.msg_connect((self.gsm_control_channels_decoder_0, 'msgs'), (client_socket, 'pdus'))
 
         #Connect the printer is self.verbose is True
         if self.verbose:
@@ -217,7 +219,7 @@ if __name__ == '__main__':
 
     print("ARFCN: " + str(arfcn))
 
-    analyzer = analyzer(fc=fc, gain=gain, samp_rate=sample_rate, ppm=ppm, arfcn=arfcn, capture_id="test0", udp_port=4729, rec_length=30, verbose=True)
+    analyzer = analyzer(fc=fc, gain=gain, samp_rate=sample_rate, ppm=ppm, arfcn=arfcn, capture_id="test0", udp_ports=[4729], rec_length=30, verbose=True)
     analyzer.start()
     analyzer.wait()
 
