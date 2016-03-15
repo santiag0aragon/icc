@@ -422,22 +422,8 @@ if __name__ == '__main__':
 
 
 # Tower Information Consistency Check
-                #print 'ENtering Tower Information Consistency check...'
                 if len(found_list) > 0 and not options.no_TIC:
-                #    print 'Tower Information Consistency check...'
                     tic.tic(found_list, info, options.verbose)
-                #     print("Printing cell tower info and checking database....")
-                #     for info in sorted(found_list):
-                #         print info
-                #         if options.verbose:
-                #             print info.get_verbose_info()
-                #         nr_of_hits = len(CellTower.queryTower(info.lac, info.cid))
-                #         if nr_of_hits > 0:
-                #             print(" Cell tower found in database, " + str(nr_of_hits) + " matches")
-                #         else:
-                #             print(" No match found in database")
-                # else:
-                #     print("No cell towers found...")
 
             scanner = None
             current_freq += channels_num * 0.2e6
