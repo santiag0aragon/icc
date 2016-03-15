@@ -22,7 +22,7 @@ Sends the decoded stuff to all ports in the udp port list
 
 class analyzer(gr.top_block):
 
-    def __init__(self, fc, gain, samp_rate, ppm, arfcn, capture_id, udp_ports=[], store_capture=True, verbose=False, band=None, rec_length=None, args=""):
+    def __init__(self, fc, gain, samp_rate, ppm, arfcn, capture_id, udp_ports=[], store_capture=True, verbose=False, band=None, rec_length=None, test=False, args=""):
         """
         capture_id = identifier for the capture used to store the files (e.g. <capture_id>.cfile)
         store_capture = boolean indicating if the capture should be stored on disk or not
@@ -90,7 +90,8 @@ class analyzer(gr.top_block):
         for udp_port in self.udp_ports:
             #The server is for testing only
             #WARNING remove the server if you want connect to a different one
-            self.server_sockets.append(blocks.socket_pdu("UDP_SERVER", "127.0.0.1", str(udp_port), 10000))
+            if test:
+                self.server_sockets.append(blocks.socket_pdu("UDP_SERVER", "127.0.0.1", str(udp_port), 10000))
             self.client_sockets.append(blocks.socket_pdu("UDP_CLIENT", "127.0.0.1", str(udp_port), 10000))
 
         #Sinks to store the capture file if requested
@@ -208,7 +209,7 @@ if __name__ == '__main__':
     fc = 933.6e6
     sample_rate = 2000000.052982
     ppm = 90 #frequency offset in ppm
-    gain = 10
+    gain = 30
 
 
     #Get the arfcn
@@ -219,7 +220,10 @@ if __name__ == '__main__':
 
     print("ARFCN: " + str(arfcn))
 
-    analyzer = analyzer(fc=fc, gain=gain, samp_rate=sample_rate, ppm=ppm, arfcn=arfcn, capture_id="test0", udp_ports=[4729], rec_length=30, verbose=True)
+    analyzer = analyzer(fc=fc, gain=gain, samp_rate=sample_rate,
+                        ppm=ppm, arfcn=arfcn, capture_id="test0",
+                        udp_ports=[4729, 4444], rec_length=30,
+                        verbose=False, test=False)
     analyzer.start()
     analyzer.wait()
 
