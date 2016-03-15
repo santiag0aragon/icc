@@ -22,11 +22,13 @@ Sends the decoded stuff to all ports in the udp port list
 
 class analyzer(gr.top_block):
 
-    def __init__(self, fc, gain, samp_rate, ppm, arfcn, capture_id, udp_ports=[], store_capture=True, verbose=False, band=None, rec_length=None, test=False, args=""):
+    def __init__(self, fc, gain, samp_rate, ppm, arfcn, capture_id, udp_ports=[], max_timeslot=0, store_capture=True, verbose=False, band=None, rec_length=None, test=False, args=""):
         """
         capture_id = identifier for the capture used to store the files (e.g. <capture_id>.cfile)
         store_capture = boolean indicating if the capture should be stored on disk or not
         rec_length = capture time in seconds
+        max_timeslot = timeslot 0...max_timeslot will be decoded
+        udp_ports = a list of udp ports to send the captured GSMTap frames to
         """
 
         gr.top_block.__init__(self, "Gr-gsm Capture")
@@ -80,8 +82,16 @@ class analyzer(gr.top_block):
 
         #Control channel demapper for timeslot 0
         self.gsm_bcch_ccch_demapper_0 = grgsm.universal_ctrl_chans_demapper(0, ([2,6,12,16,22,26,32,36,42,46]), ([1,2,2,2,2,2,2,2,2,2]))
-        #Control channel decoder (extracts the packets)
-        self.gsm_control_channels_decoder_0 = grgsm.control_channels_decoder()
+        #For all other timeslots are assumed to contain sdcch8 logical channels, this demapping may be incorrect
+        if max_timeslot >= 1 and max_timeslot <= 8:
+            self.gsm_sdcch8_demappers = []
+            for i in range(1,max_timeslot + 1):
+                self.gsm_sdcch8_demappers.append(grgsm.universal_ctrl_chans_demapper(i, ([0,4,8,12,16,20,24,28,32,36,40,44]), ([8,8,8,8,8,8,8,8,136,136,136,136])))
+
+        #Control channel decoder (extracts the packets), one for each timeslot
+        self.gsm_control_channels_decoders = []
+        for i in range(0,max_timeslot + 1):
+            self.gsm_control_channels_decoders.append(grgsm.control_channels_decoder())
 #        self.blocks_socket_pdu_0 = blocks.socket_pdu("UDP_CLIENT", "127.0.0.1", "4729", 10000, False)#        self.blocks_socket_pdu_0 = blocks.socket_pdu("UDP_CLIENT", "127.0.0.1", "4729", 10000, False)
 
         #UDP client that sends all decoded C0T0 packets to the specified port on localhost if requested
@@ -130,17 +140,25 @@ class analyzer(gr.top_block):
         self.msg_connect(self.gsm_clock_offset_control, "ppm", self.gsm_input, "ppm_in")
         self.msg_connect(self.gsm_receiver, "measurements", self.gsm_clock_offset_control, "measurements")
 
-        #Connect the demapper and decoder
+        #Connect the demapper and decoder for timeslot 0
         self.msg_connect((self.gsm_receiver, 'C0'), (self.gsm_bcch_ccch_demapper_0, 'bursts'))
-        self.msg_connect((self.gsm_bcch_ccch_demapper_0, 'bursts'), (self.gsm_control_channels_decoder_0, 'bursts'))
+        self.msg_connect((self.gsm_bcch_ccch_demapper_0, 'bursts'), (self.gsm_control_channels_decoders[0], 'bursts'))
+
+        #Connect the demapper and decoders for the other timeslots
+        for i in range(1,max_timeslot +1):
+            self.msg_connect((self.gsm_receiver, 'C0'), (self.gsm_sdcch8_demappers[i-1], 'bursts'))
+            self.msg_connect((self.gsm_sdcch8_demappers[i-1], 'bursts'), (self.gsm_control_channels_decoders[i], 'bursts'))
+
 
         #Connect the UDP clients if requested
         for client_socket in self.client_sockets:
-            self.msg_connect((self.gsm_control_channels_decoder_0, 'msgs'), (client_socket, 'pdus'))
+            for i in range(0,max_timeslot + 1):
+                self.msg_connect((self.gsm_control_channels_decoders[i], 'msgs'), (client_socket, 'pdus'))
 
         #Connect the printer is self.verbose is True
         if self.verbose:
-            self.msg_connect((self.gsm_control_channels_decoder_0, 'msgs'), (self.gsm_message_printer, 'msgs'))
+            for i in range(0,max_timeslot + 1):
+                self.msg_connect((self.gsm_control_channels_decoders[i], 'msgs'), (self.gsm_message_printer, 'msgs'))
 
         """
         if self.verbose:
@@ -206,7 +224,7 @@ class analyzer(gr.top_block):
 if __name__ == '__main__':
 
     arfcn = 0
-    fc = 933.6e6
+    fc = 933.6e6 #Spiegel cell tower
     sample_rate = 2000000.052982
     ppm = 90 #frequency offset in ppm
     gain = 30
@@ -222,8 +240,8 @@ if __name__ == '__main__':
 
     analyzer = analyzer(fc=fc, gain=gain, samp_rate=sample_rate,
                         ppm=ppm, arfcn=arfcn, capture_id="test0",
-                        udp_ports=[4729, 4444], rec_length=30,
-                        verbose=False, test=False)
+                        udp_ports=[4729], rec_length=30, max_timeslot=2,
+                        verbose=True, test=True)
     analyzer.start()
     analyzer.wait()
 
