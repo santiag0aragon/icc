@@ -38,7 +38,7 @@ import pmt
 import time
 
 import src.det_methods.tic as tic
-import aux.ch_info as ch_info
+import src.aux.ch_info as ch_info
 
 #from wideband_receiver import *
 
