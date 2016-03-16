@@ -20,7 +20,7 @@ Stores the capture in cfile format, and stores the bursts(frames)
 Sends the decoded stuff to all ports in the udp port list
 """
 
-class analyzer(gr.top_block):
+class Analyzer(gr.top_block):
 
     def __init__(self, fc, gain, samp_rate, ppm, arfcn, capture_id, udp_ports=[], max_timeslot=0, store_capture=True, verbose=False, band=None, rec_length=None, test=False, args=""):
         """
@@ -238,7 +238,7 @@ if __name__ == '__main__':
 
     print("ARFCN: " + str(arfcn))
 
-    analyzer = analyzer(fc=fc, gain=gain, samp_rate=sample_rate,
+    analyzer = Analyzer(fc=fc, gain=gain, samp_rate=sample_rate,
                         ppm=ppm, arfcn=arfcn, capture_id="test0",
                         udp_ports=[4729], rec_length=30, max_timeslot=2,
                         verbose=True, test=True)
