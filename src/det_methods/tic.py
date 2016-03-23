@@ -8,7 +8,7 @@ def tic(found_list, info, verbose):
             print info
             if verbose:
                 print info.get_verbose_info()
-            nr_of_hits = len(CellTower.queryTower(info.lac, info.cid))
+            nr_of_hits = len(CellTower.queryTower(info.mcc, info.mnc, info.cid))
             if nr_of_hits > 0:
                 print(" Cell tower found in database, " + str(nr_of_hits) + " matches")
             else:
