@@ -20,6 +20,7 @@ class GSMTap(Packet):
         else:
             return Raw
 
+
 class CCCHCommon(Packet):
     name = "CCCHCommon"
     fields_desc = [XShortField("junk1", 0),
@@ -29,7 +30,8 @@ class CCCHCommon(Packet):
         if self.message_type == 2:
             return CCCHCommon
         else:
-            return Raw
+            return ImmediateAssignment
+
 
 class ImmediateAssignment(Packet):
     name = "ImmediateAssignment"
