@@ -23,7 +23,7 @@ class Detector:
         self.sock.bind((UDP_IP, self.udp_port))
 
         while True:
-            data, addr = self.sock.recvfrom(39) # buffer size is 1024 bytes
+            data, addr = self.sock.recvfrom(1024) # buffer size is 1024 bytes
             self.handle_packet(data)
 
     def handle_packet(self, data):
