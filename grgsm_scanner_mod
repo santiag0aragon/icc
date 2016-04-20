@@ -421,7 +421,7 @@ if __name__ == '__main__':
                     info = ch_info.channel_info(grgsm.arfcn.downlink2arfcn(found_freqs[i], options.band), found_freqs[i], cell_ids[i], lacs[i], mccs[i], mncs[i], ccch_confs[i], powers[i], neighbour_list, cell_arfcn_list)
                     found_list.append(info)
 
-
+                print len(found_list)
 # Tower Information Consistency Check
                 if len(found_list) > 0 and not options.no_TIC:
                     tic.tic(found_list, info, options.verbose)
