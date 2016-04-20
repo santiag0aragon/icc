@@ -20,6 +20,7 @@ Stores the capture in cfile format, and stores the bursts(frames)
 Sends the decoded stuff to all ports in the udp port list
 """
 
+
 class Analyzer(gr.top_block):
 
     def __init__(self, fc, gain, samp_rate, ppm, arfcn, capture_id, udp_ports=[], max_timeslot=0, store_capture=True, verbose=False, band=None, rec_length=None, test=False, args=""):
@@ -226,7 +227,7 @@ if __name__ == '__main__':
     arfcn = 0
     fc = 933.6e6 #Spiegel cell tower
     sample_rate = 2000000.052982
-    ppm = 90 #frequency offset in ppm
+    ppm = 0 #frequency offset in ppm
     gain = 30
 
 
