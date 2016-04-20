@@ -2,6 +2,11 @@
 */*/*.pyc
 */*.pyc
 *.pyc
+
+src/*.pyc
+src/det_methods/*.pyc
+
+
 ### Windows ###
 # Windows image file caches
 Thumbs.db
