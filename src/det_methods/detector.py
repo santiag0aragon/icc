@@ -3,6 +3,7 @@ from scapy.all import *
 from gsmpackets import *
 from multiprocessing import Process
 
+
 class Detector:
 
     def __init__(self, udp_port):
@@ -27,7 +28,10 @@ class Detector:
             self.handle_packet(data)
 
     def handle_packet(self, data):
-        print ':'.join(x.encode('hex') for x in data)
+        # print ':'.join(x.encode('hex') for x in data)
+        p = GSMTap(data)
+        print type(p.payload)
+
 
     def start(self):
         self.process = Process(target=self.listen)
