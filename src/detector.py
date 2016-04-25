@@ -8,7 +8,6 @@ class Detector:
     def __init__(self, udp_port):
         """
         Parameters:
-        hooks = list of functions to call with the received frame as argument
         """
         self.udp_port = udp_port
         self.sock = None
@@ -28,6 +27,9 @@ class Detector:
 
     def handle_packet(self, data):
         print ':'.join(x.encode('hex') for x in data)
+
+    def on_finish():
+        pass
 
     def start(self):
         self.process = Process(target=self.listen)

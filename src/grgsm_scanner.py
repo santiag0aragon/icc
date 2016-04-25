@@ -37,9 +37,7 @@ import osmosdr
 import pmt
 import time
 
-import src.det_methods.tic as tic
-import src.det_methods.neighbours as neigbours
-import src.aux.ch_info as ch_info
+from aux import ChannelInfo
 
 #from wideband_receiver import *
 
@@ -227,7 +225,7 @@ class wideband_scanner(gr.top_block):
         # correction of central frequency
         # if the receiver has large frequency offset
         # the value of this variable should be set close to that offset in ppm
-        self.rtlsdr_source.set_freq_corr(options.ppm, 0)
+        self.rtlsdr_source.set_freq_corr(ppm, 0)
 
         self.rtlsdr_source.set_dc_offset_mode(2, 0)
         self.rtlsdr_source.set_iq_balance_mode(0, 0)
@@ -237,7 +235,7 @@ class wideband_scanner(gr.top_block):
         self.head = blocks.head(gr.sizeof_gr_complex * 1, int(rec_len * sample_rate))
 
         # shift again by -0.1MHz in order to align channel center in 0Hz
-        self.blocks_rotator_cc = blocks.rotator_cc(-2 * pi * 0.1e6 / options.samp_rate)
+        self.blocks_rotator_cc = blocks.rotator_cc(-2 * pi * 0.1e6 / sample_rate)
 
         self.wideband_receiver = wideband_receiver(OSR=4, fc=carrier_frequency, samp_rate=sample_rate)
         self.gsm_extract_system_info = grgsm.extract_system_info()
@@ -253,50 +251,79 @@ class wideband_scanner(gr.top_block):
         self.rtlsdr_source.set_center_freq(carrier_frequency - 0.1e6, 0)
 
 
+def scan(bands=[], samp_rate=2e6, ppm=0, gain=30.0, speed=4):
+    print "Starting scan"
+    found_list = []
+    channels_num = int(samp_rate/0.2e6)
+    for band in bands:
+        current_band = band
+        print "\nScanning band: %s"% current_band
 
-# class channel_info(object):
 
-#     def __init__(self, arfcn, freq, cid, lac, mcc, mnc, ccch_conf, power, neighbours, cell_arfcns):
-#         self.arfcn = arfcn
-#         self.freq = freq
-#         self.cid = cid
-#         self.lac = lac
-#         self.mcc = mcc
-#         self.mnc = mnc
-#         self.ccch_conf = ccch_conf
-#         self.power = power
-#         self.neighbours = neighbours
-#         self.cell_arfcns = cell_arfcns
+        first_arfcn = grgsm.arfcn.get_first_arfcn(current_band)
+        last_arfcn = grgsm.arfcn.get_last_arfcn(current_band)
+        last_center_arfcn = last_arfcn - int((channels_num / 2) - 1)
 
-#     def get_verbose_info(self):
-#         i = "  |---- Configuration: %s\n" % self.get_ccch_conf()
-#         i += "  |---- Cell ARFCNs: " + ", ".join(map(str, self.cell_arfcns)) + "\n"
-#         i += "  |---- Neighbour Cells: " + ", ".join(map(str, self.neighbours)) + "\n"
-#         return i
+        current_freq = grgsm.arfcn.arfcn2downlink(first_arfcn + int(channels_num / 2) - 1, current_band)
+        last_freq = grgsm.arfcn.arfcn2downlink(last_center_arfcn, current_band)
+        stop_freq = last_freq + 0.2e6 * channels_num
 
-#     def get_ccch_conf(self):
-#         if self.ccch_conf == 0:
-#             return "1 CCCH, not combined"
-#         elif self.ccch_conf == 1:
-#             return "1 CCCH, combined"
-#         elif self.ccch_conf == 2:
-#             return "2 CCCH, not combined"
-#         elif self.ccch_conf == 4:
-#             return "3 CCCH, not combined"
-#         elif self.ccch_conf == 6:
-#             return "4 CCCH, not combined"
-#         else:
-#             return "Unknown"
+        while current_freq < stop_freq:
 
-#     def getKey(self):
-#         return self.arfcn
+            # silence rtl_sdr output:
+            # open 2 fds
+            null_fds = [os.open(os.devnull, os.O_RDWR) for x in xrange(2)]
+            # save the current file descriptors to a tuple
+            save = os.dup(1), os.dup(2)
+            # put /dev/null fds on 1 and 2
+            os.dup2(null_fds[0], 1)
+            os.dup2(null_fds[1], 2)
 
-#     def __cmp__(self, other):
-#         if hasattr(other, 'getKey'):
-#             return self.getKey().__cmp__(other.getKey())
+            # instantiate scanner and processor
+            scanner = wideband_scanner(rec_len=6-speed,
+                                sample_rate=samp_rate,
+                                carrier_frequency=current_freq,
+                                ppm=ppm, args="")
 
-#     def __repr__(self):
-#         return "ARFCN: %4u, Freq: %6.1fM, CID: %5u, LAC: %5u, MCC: %3u, MNC: %3u, Pwr: %3i" % (self.arfcn, self.freq/1e6, self.cid, self.lac, self.mcc, self.mnc, self.power)
+            # start recording
+            scanner.start()
+            scanner.wait()
+            scanner.stop()
+
+            # restore file descriptors so we can print the results
+            os.dup2(save[0], 1)
+            os.dup2(save[1], 2)
+            # close the temporary fds
+            os.close(null_fds[0])
+            os.close(null_fds[1])
+
+            freq_offsets = numpy.fft.ifftshift(numpy.array(range(int(-numpy.floor(channels_num/2)),int(numpy.floor((channels_num+1)/2))))*2e5)
+            detected_c0_channels = scanner.gsm_extract_system_info.get_chans()
+
+            if detected_c0_channels:
+                chans = numpy.array(scanner.gsm_extract_system_info.get_chans())
+                found_freqs = current_freq + freq_offsets[(chans)]
+
+                cell_ids = numpy.array(scanner.gsm_extract_system_info.get_cell_id())
+                lacs = numpy.array(scanner.gsm_extract_system_info.get_lac())
+                mccs = numpy.array(scanner.gsm_extract_system_info.get_mcc())
+                mncs = numpy.array(scanner.gsm_extract_system_info.get_mnc())
+                ccch_confs = numpy.array(scanner.gsm_extract_system_info.get_ccch_conf())
+                powers = numpy.array(scanner.gsm_extract_system_info.get_pwrs())
+
+
+                for i in range(0, len(chans)):
+                    cell_arfcn_list = scanner.gsm_extract_system_info.get_cell_arfcns(chans[i])
+                    neighbour_list = scanner.gsm_extract_system_info.get_neighbours(chans[i])
+
+                    info = ChannelInfo(grgsm.arfcn.downlink2arfcn(found_freqs[i], current_band), found_freqs[i], cell_ids[i], lacs[i], mccs[i], mncs[i], ccch_confs[i], powers[i], neighbour_list, cell_arfcn_list)
+                    found_list.append(info)
+
+            scanner = None
+            current_freq += channels_num * 0.2e6
+        print "Band {} done".format(current_band)
+    return found_list
+
 
 
 if __name__ == '__main__':
@@ -421,16 +448,16 @@ if __name__ == '__main__':
                     cell_arfcn_list = scanner.gsm_extract_system_info.get_cell_arfcns(chans[i])
                     neighbour_list = scanner.gsm_extract_system_info.get_neighbours(chans[i])
 
-                    info = ch_info.channel_info(grgsm.arfcn.downlink2arfcn(found_freqs[i], options.band), found_freqs[i], cell_ids[i], lacs[i], mccs[i], mncs[i], ccch_confs[i], powers[i], neighbour_list, cell_arfcn_list)
+                    info = ChannelInfo(grgsm.arfcn.downlink2arfcn(found_freqs[i], options.band), found_freqs[i], cell_ids[i], lacs[i], mccs[i], mncs[i], ccch_confs[i], powers[i], neighbour_list, cell_arfcn_list)
                     found_list.append(info)
 
-# Detection methods #
-                if len(found_list) > 0:
-                    if not options.no_TIC:
-                        tic.tic(found_list, info, options.verbose)
-                    if not options.no_neighbours:
-                        neigbours.neighbours(found_list, info, options.verbose)
-#####################
-
+# # Detection methods #
+#                 if len(found_list) > 0:
+#                     if not options.no_TIC:
+#                         tic.tic(found_list, info, options.verbose)
+#                     if not options.no_neighbours:
+#                         neigbours.neighbours(found_list, info, options.verbose)
+# #####################
+                    print found_list
             scanner = None
             current_freq += channels_num * 0.2e6
