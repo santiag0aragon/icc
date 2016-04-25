@@ -22,7 +22,7 @@ Sends the decoded stuff to all ports in the udp port list
 
 class Analyzer(gr.top_block):
 
-    def __init__(self, fc, gain, samp_rate, ppm, arfcn, capture_id, udp_ports=[], max_timeslot=0, store_capture=True, verbose=False, band=None, rec_length=None, test=False, args=""):
+    def __init__(self, gain=None, samp_rate=None, ppm=None, arfcn=None, capture_id=None, udp_ports=[], max_timeslot=0, store_capture=True, verbose=False, band=None, rec_length=None, test=False, args=""):
         """
         capture_id = identifier for the capture used to store the files (e.g. <capture_id>.cfile)
         store_capture = boolean indicating if the capture should be stored on disk or not
@@ -36,7 +36,13 @@ class Analyzer(gr.top_block):
         ##################################################
         # Parameters
         ##################################################
-        self.fc = fc
+
+        self.arfcn = arfcn
+        for band in grgsm.arfcn.get_bands():
+            if grgsm.arfcn.is_valid_arfcn(self.arfcn, band):
+                self.fc = grgsm.arfcn.arfcn2downlink(arfcn, band)
+                break
+
         self.gain = gain
         self.samp_rate = samp_rate
         self.ppm = ppm
@@ -55,7 +61,7 @@ class Analyzer(gr.top_block):
 
         self.rtlsdr_source = osmosdr.source( args="numchan=" + str(1) + " " + "" )
         self.rtlsdr_source.set_sample_rate(samp_rate)
-        self.rtlsdr_source.set_center_freq(fc - shiftoff, 0)
+        self.rtlsdr_source.set_center_freq(self.fc - shiftoff, 0)
         self.rtlsdr_source.set_freq_corr(ppm, 0)
         self.rtlsdr_source.set_dc_offset_mode(2, 0)
         self.rtlsdr_source.set_iq_balance_mode(2, 0)
@@ -75,10 +81,10 @@ class Analyzer(gr.top_block):
         self.gsm_input = grgsm.gsm_input(
             ppm=0,
             osr=4,
-            fc=fc,
+            fc=self.fc,
             samp_rate_in=samp_rate,
         )
-        self.gsm_clock_offset_control = grgsm.clock_offset_control(fc-shiftoff)
+        self.gsm_clock_offset_control = grgsm.clock_offset_control(self.fc-shiftoff)
 
         #Control channel demapper for timeslot 0
         self.gsm_bcch_ccch_demapper_0 = grgsm.universal_ctrl_chans_demapper(0, ([2,6,12,16,22,26,32,36,42,46]), ([1,2,2,2,2,2,2,2,2,2]))
@@ -238,106 +244,9 @@ if __name__ == '__main__':
 
     print("ARFCN: " + str(arfcn))
 
-    analyzer = Analyzer(fc=fc, gain=gain, samp_rate=sample_rate,
+    analyzer = Analyzer(gain=gain, samp_rate=sample_rate,
                         ppm=ppm, arfcn=arfcn, capture_id="test0",
                         udp_ports=[4729], rec_length=30, max_timeslot=2,
                         verbose=True, test=True)
     analyzer.start()
     analyzer.wait()
-
-    #Commandline parsing
-    """
-    parser = OptionParser(option_class=eng_option, usage="%prog [options]",
-                          description="RTL-SDR capturing app of gr-gsm.")
-
-    parser.add_option("-f", "--fc", dest="fc", type="eng_float",
-                      help="Set frequency [default=%default]")
-
-    parser.add_option("-a", "--arfcn", dest="arfcn", type="intx",
-                      help="Set ARFCN instead of frequency. In some cases you may have to provide the GSM band also")
-
-    parser.add_option("-g", "--gain", dest="gain", type="eng_float",
-                      default=eng_notation.num_to_str(30),
-                      help="Set gain [default=%default]")
-
-    parser.add_option("-s", "--samp-rate", dest="samp_rate", type="eng_float",
-                      default=eng_notation.num_to_str(2000000.052982),
-                      help="Set samp_rate [default=%default]")
-
-    parser.add_option("-p", "--ppm", dest="ppm", type="intx", default=0,
-                      help="Set ppm [default=%default]")
-
-    parser.add_option("-b", "--burst-file", dest="burst_file",
-                      help="File where the captured bursts are saved")
-
-    parser.add_option("-c", "--cfile", dest="cfile",
-                      help="File where the captured data are saved")
-
-    bands_list = ", ".join(grgsm.arfcn.get_bands())
-    parser.add_option("--band", dest="band",
-                      help="Specify the GSM band for the frequency.\nAvailable bands are: " + bands_list + ".\nIf no band is specified, it will be determined automatically, defaulting to 0." )
-
-    parser.add_option("", "--args", dest="args", type="string", default="",
-        help="Set device arguments [default=%default]")
-
-    parser.add_option("-v", "--verbose", action="store_true",
-                      help="If set, the captured bursts are printed to stdout")
-
-    parser.add_option("-T", "--rec-length", dest="rec_length", type="eng_float",
-        help="Set length of recording in seconds [default=%default]")
-
-    (options, args) = parser.parse_args()
-
-    if options.cfile is None and options.burst_file is None:
-        parser.error("Please provide a cfile or a burst file (or both) to save the captured data\n")
-
-    if (options.fc is None and options.arfcn is None) or (options.fc is not None and options.arfcn is not None):
-        parser.error("You have to provide either a frequency or an ARFCN (but not both).\n")
-
-    arfcn = 0
-    fc = 939.4e6
-    if options.arfcn:
-        if options.band:
-            if options.band not in grgsm.arfcn.get_bands():
-                parser.error("Invalid GSM band\n")
-            elif not grgsm.arfcn.is_valid_arfcn(options.arfcn, options.band):
-                parser.error("ARFCN is not valid in the specified band\n")
-            else:
-                arfcn = options.arfcn
-                fc = grgsm.arfcn.arfcn2downlink(arfcn, options.band)
-        else:
-            arfcn = options.arfcn
-            for band in grgsm.arfcn.get_bands():
-                if grgsm.arfcn.is_valid_arfcn(arfcn, band):
-                    fc = grgsm.arfcn.arfcn2downlink(arfcn, band)
-                    break
-    elif options.fc:
-        fc = options.fc
-        if options.band:
-            if options.band not in grgsm.arfcn.get_bands():
-                parser.error("Invalid GSM band\n")
-            elif not grgsm.arfcn.is_valid_downlink(options.fc, options.band):
-                parser.error("Frequency is not valid in the specified band\n")
-            else:
-                arfcn = grgsm.arfcn.downlink2arfcn(options.fc, options.band)
-        else:
-            for band in grgsm.arfcn.get_bands():
-                if grgsm.arfcn.is_valid_downlink(options.fc, band):
-                    arfcn = grgsm.arfcn.downlink2arfcn(options.fc, band)
-                    break
-
-    tb = grgsm_capture(fc=fc, gain=options.gain, samp_rate=options.samp_rate,
-                         ppm=options.ppm, arfcn=arfcn, cfile=options.cfile,
-                         burst_file=options.burst_file, band=options.band, verbose=options.verbose,
-                         rec_length=options.rec_length)
-
-    def signal_handler(signal, frame):
-        tb.stop()
-        tb.wait()
-        sys.exit(0)
-
-    signal.signal(signal.SIGINT, signal_handler)
-
-    tb.start()
-    tb.wait()
-    """

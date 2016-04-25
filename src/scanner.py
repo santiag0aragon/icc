@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/local/bin/python2
 # -*- coding: utf-8 -*-
 # @file
 # @author Piotr Krysik <ptrkrysik@gmail.com>
@@ -250,22 +250,20 @@ class wideband_scanner(gr.top_block):
         self.carrier_frequency = carrier_frequency
         self.rtlsdr_source.set_center_freq(carrier_frequency - 0.1e6, 0)
 
+def scan(bands=[], sample_rate=2e6, ppm=0, gain=30.0, speed=4):
 
-def scan(bands=[], samp_rate=2e6, ppm=0, gain=30.0, speed=4):
-    print "Starting scan"
     found_list = []
-    channels_num = int(samp_rate/0.2e6)
+    channels_num = int(sample_rate/0.2e6)
+    arfcn_list = dict()
     for band in bands:
-        current_band = band
-        print "\nScanning band: %s"% current_band
+        print "\nScanning band: %s"% band
 
-
-        first_arfcn = grgsm.arfcn.get_first_arfcn(current_band)
-        last_arfcn = grgsm.arfcn.get_last_arfcn(current_band)
+        first_arfcn = grgsm.arfcn.get_first_arfcn(band)
+        last_arfcn = grgsm.arfcn.get_last_arfcn(band)
         last_center_arfcn = last_arfcn - int((channels_num / 2) - 1)
 
-        current_freq = grgsm.arfcn.arfcn2downlink(first_arfcn + int(channels_num / 2) - 1, current_band)
-        last_freq = grgsm.arfcn.arfcn2downlink(last_center_arfcn, current_band)
+        current_freq = grgsm.arfcn.arfcn2downlink(first_arfcn + int(channels_num / 2) - 1, band)
+        last_freq = grgsm.arfcn.arfcn2downlink(last_center_arfcn, band)
         stop_freq = last_freq + 0.2e6 * channels_num
 
         while current_freq < stop_freq:
@@ -281,9 +279,9 @@ def scan(bands=[], samp_rate=2e6, ppm=0, gain=30.0, speed=4):
 
             # instantiate scanner and processor
             scanner = wideband_scanner(rec_len=6-speed,
-                                sample_rate=samp_rate,
+                                sample_rate=sample_rate,
                                 carrier_frequency=current_freq,
-                                ppm=ppm, args="")
+                                ppm=ppm)
 
             # start recording
             scanner.start()
@@ -316,15 +314,14 @@ def scan(bands=[], samp_rate=2e6, ppm=0, gain=30.0, speed=4):
                     cell_arfcn_list = scanner.gsm_extract_system_info.get_cell_arfcns(chans[i])
                     neighbour_list = scanner.gsm_extract_system_info.get_neighbours(chans[i])
 
-                    info = ChannelInfo(grgsm.arfcn.downlink2arfcn(found_freqs[i], current_band), found_freqs[i], cell_ids[i], lacs[i], mccs[i], mncs[i], ccch_confs[i], powers[i], neighbour_list, cell_arfcn_list)
+                    info = ChannelInfo(grgsm.arfcn.downlink2arfcn(found_freqs[i], band), found_freqs[i], cell_ids[i], lacs[i], mccs[i], mncs[i], ccch_confs[i], powers[i], neighbour_list, cell_arfcn_list)
+
                     found_list.append(info)
+                    print info.arfcn
 
             scanner = None
             current_freq += channels_num * 0.2e6
-        print "Band {} done".format(current_band)
     return found_list
-
-
 
 if __name__ == '__main__':
     parser = OptionParser(option_class=eng_option, usage="%prog: [options]")
@@ -346,6 +343,7 @@ if __name__ == '__main__':
 # Detection methods #
     parser.add_option("--no_TIC", action="store_true", default=False, help="Disable the tower information consistency checks.")
     parser.add_option("--no_neighbours", action="store_true", default=False, help="Disable the neighbours consistency checks.")
+    parser.add_option("--no_analyzer", action="store_true", default=False, help="Disable the in depth analysis of suspicious BTS.")
 #####################
     """
         Dont forget: sudo sysctl kernel.shmmni=32000
@@ -379,6 +377,9 @@ if __name__ == '__main__':
     print "GSM bands to be scanned:\n"
     print "\n\t".join(to_scan)
 
+    #scan(bands=to_scan, sample_rate=options.samp_rate, ppm=options.ppm, gain=options.gain, speed=options.speed)
+    #exit()
+
     # Detection methods to be used
     print "\nDetection Methods to be used:"
     if not options.no_TIC:
@@ -386,7 +387,7 @@ if __name__ == '__main__':
     if not options.no_neighbours:
         print "\tNeighbour Consistency Check"
 
-
+    arfcn_list = dict()
     for band in to_scan:
         options.band = band
         print "\nScanning band: %s"% band
@@ -443,21 +444,15 @@ if __name__ == '__main__':
                 ccch_confs = numpy.array(scanner.gsm_extract_system_info.get_ccch_conf())
                 powers = numpy.array(scanner.gsm_extract_system_info.get_pwrs())
 
-                found_list = []
+                found_list = dict()
                 for i in range(0, len(chans)):
                     cell_arfcn_list = scanner.gsm_extract_system_info.get_cell_arfcns(chans[i])
                     neighbour_list = scanner.gsm_extract_system_info.get_neighbours(chans[i])
 
                     info = ChannelInfo(grgsm.arfcn.downlink2arfcn(found_freqs[i], options.band), found_freqs[i], cell_ids[i], lacs[i], mccs[i], mncs[i], ccch_confs[i], powers[i], neighbour_list, cell_arfcn_list)
-                    found_list.append(info)
 
-# # Detection methods #
-#                 if len(found_list) > 0:
-#                     if not options.no_TIC:
-#                         tic.tic(found_list, info, options.verbose)
-#                     if not options.no_neighbours:
-#                         neigbours.neighbours(found_list, info, options.verbose)
-# #####################
-                    print found_list
+                    found_list[info.arfcn] = info
+                    print info.arfcn
+
             scanner = None
             current_freq += channels_num * 0.2e6

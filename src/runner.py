@@ -1,5 +1,3 @@
-from grgsm_scanner import scan
-
 from gnuradio import blocks
 from gnuradio import gr
 from gnuradio import eng_notation
@@ -22,6 +20,7 @@ from database import *
 from models import *
 from analyzer import Analyzer
 from detector_manager import DetectorManager
+from scanner import scan
 
 class Runner():
     def __init__(self, bands, sample_rate, ppm, gain, speed, rec_time_sec):
@@ -55,7 +54,7 @@ class Runner():
         detector_man = DetectorManager(udp_port=udp_port)
         proc = Process(target=detector_man.start)
         proc.start()
-        analyzer = Analyzer(fc=ch.freq, gain=self.gain, samp_rate=self.sample_rate,
+        analyzer = Analyzer(gain=self.gain, samp_rate=self.sample_rate,
                             ppm=self.ppm, arfcn=ch.arfcn, capture_id=cellscan.getCaptureFileName(),
                             udp_ports=[udp_port], rec_length=self.rec_time_sec, max_timeslot=2,
                             verbose=False, test=False)
@@ -80,7 +79,7 @@ class Runner():
         db_session.add(scan_obj)
         db_session.commit()
         self.scan_id = scan_obj.id
-        return scan(bands=self.bands, samp_rate=self.sample_rate, ppm=self.ppm, gain=self.gain, speed=self.speed)
+        return scan(bands=self.bands, sample_rate=self.sample_rate, ppm=self.ppm, gain=self.gain, speed=self.speed)
 
 if __name__ == "__main__":
     parser = OptionParser(option_class=eng_option, usage="%prog: [options]")
@@ -115,7 +114,7 @@ if __name__ == "__main__":
     if options.band is "900M-Bands":
         to_scan = ['P-GSM',
                    'E-GSM',
-                   #'R-GSM',
+                   'R-GSM',
                    #'GSM450',
                    #'GSM480',
                    #'GSM850',  Nothing found
