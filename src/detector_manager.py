@@ -29,7 +29,6 @@ class DetectorManager():
         print "detectormanager started"
         while self.running:
             data, addr = self.sock.recvfrom(1024) # buffer size is 1024 bytes
-            print "detectormanager received packet"
             for detector in self.detectors:
                 detector.handle_packet(data)
 

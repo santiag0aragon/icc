@@ -21,6 +21,7 @@ from models import *
 from analyzer import Analyzer
 from detector_manager import DetectorManager
 from scanner import scan
+from cellinfochecks import *
 
 class Runner():
     def __init__(self, bands, sample_rate, ppm, gain, speed, rec_time_sec):
@@ -32,41 +33,55 @@ class Runner():
         self.scan_id = None
         self.rec_time_sec = rec_time_sec
 
-    def start(self):
+    def start(self, analyze=True, detection=False):
         db_session = session_class()
         found = self.doScan()
+        self.doCellInfoChecks(found)
         for ch in found:
             cellobs = CellObservation(freq=ch.freq, lac=ch.lac, mnc=ch.mnc, mcc=ch.mcc, arfcn=ch.arfcn, cid=ch.cid, scan_id=self.scan_id, power=ch.power)
             db_session.add(cellobs)
             db_session.commit()
-            self.analyze(cellobs.id, ch)
-            break
+            if analyze:
+                self.analyze(cellobs.id, ch, detection=detection)
 
+    def doCellInfoChecks(self, channel_infos=[]):
+        tic(channel_infos)
+        neighbours(channel_infos)
 
-    def analyze(self, cellobs_id, ch):
+    def analyze(self, cellobs_id, ch, detection=True):
         print "analyzing"
         db_session = session_class()
         cellscan = CellTowerScan(cellobservation_id=cellobs_id, sample_rate=self.sample_rate, rec_time_sec=self.rec_time_sec, timestamp=datetime.datetime.now())
         db_session.add(cellscan)
         db_session.commit()
         udp_port = 2333
+        if detection:
+            detector_man = DetectorManager(udp_port=udp_port)
+            proc = Process(target=detector_man.start)
+            proc.start()
+            analyzer = Analyzer(gain=self.gain, samp_rate=self.sample_rate,
+                                ppm=self.ppm, arfcn=ch.arfcn, capture_id=cellscan.getCaptureFileName(),
+                                udp_ports=[udp_port], rec_length=self.rec_time_sec, max_timeslot=2,
+                                verbose=False, test=False)
+            analyzer.start()
+            analyzer.wait()
+            analyzer.stop()
+            print "analyzer stopped"
+            #detector_man.stop()
+            print "detector stopping..."
 
-        detector_man = DetectorManager(udp_port=udp_port)
-        proc = Process(target=detector_man.start)
-        proc.start()
-        analyzer = Analyzer(gain=self.gain, samp_rate=self.sample_rate,
-                            ppm=self.ppm, arfcn=ch.arfcn, capture_id=cellscan.getCaptureFileName(),
-                            udp_ports=[udp_port], rec_length=self.rec_time_sec, max_timeslot=2,
-                            verbose=False, test=False)
-        analyzer.start()
-        analyzer.wait()
-        analyzer.stop()
-        print "analyzer stopped"
-        #detector_man.stop()
-        print "detector stopping..."
+            proc.terminate()
+            print "detector stopped"
+        else:
+            analyzer = Analyzer(gain=self.gain, samp_rate=self.sample_rate,
+                                ppm=self.ppm, arfcn=ch.arfcn, capture_id=cellscan.getCaptureFileName(),
+                                udp_ports=[udp_port], rec_length=self.rec_time_sec, max_timeslot=2,
+                                verbose=False, test=True)
+            analyzer.start()
+            analyzer.wait()
+            analyzer.stop()
+            print "analyzer stopped"
 
-        proc.terminate()
-        print "detector stopped"
 
     def doScan(self):
         """
@@ -130,4 +145,4 @@ if __name__ == "__main__":
     #Add scan to database
     Base.metadata.create_all(engine)
     runner = Runner(bands=to_scan, sample_rate=options.samp_rate, ppm=options.ppm, gain=options.gain, speed=options.speed, rec_time_sec=10)
-    runner.start()
+    runner.start(analyze=False)
