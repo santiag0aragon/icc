@@ -5,7 +5,7 @@ from gnuradio.eng_option import eng_option
 from gnuradio.filter import firdes
 from math import pi
 from optparse import OptionParser
-
+import datetime as d
 import grgsm
 import osmosdr
 import pmt
@@ -22,7 +22,7 @@ Sends the decoded stuff to all ports in the udp port list
 
 class Analyzer(gr.top_block):
 
-    def __init__(self, fc, gain, samp_rate, ppm, arfcn, capture_id, udp_ports=[], max_timeslot=0, store_capture=True, verbose=False, band=None, rec_length=None, test=False, args=""):
+    def __init__(self, arfcn,gain=0, samp_rate=2e6, ppm=0, capture_id="%s.cfile" % d.datetime.now(), udp_ports=[4729], max_timeslot=0, store_capture=True, verbose=False, band=None, rec_length=None, test=False, args=""):
         """
         capture_id = identifier for the capture used to store the files (e.g. <capture_id>.cfile)
         store_capture = boolean indicating if the capture should be stored on disk or not
@@ -36,18 +36,18 @@ class Analyzer(gr.top_block):
         ##################################################
         # Parameters
         ##################################################
-        self.fc = fc
+        self.verbose = verbose
+        self.set_arfcn(arfcn)
         self.gain = gain
         self.samp_rate = samp_rate
         self.ppm = ppm
-        self.arfcn = arfcn
+        # self.arfcn = arfcn
         self.band = band
         self.shiftoff = shiftoff = 400e3
         self.rec_length = rec_length
         self.store_capture = store_capture
         self.capture_id = capture_id
         self.udp_ports = udp_ports
-        self.verbose = verbose
 
         ##################################################
         # Processing Blocks
@@ -55,7 +55,7 @@ class Analyzer(gr.top_block):
 
         self.rtlsdr_source = osmosdr.source( args="numchan=" + str(1) + " " + "" )
         self.rtlsdr_source.set_sample_rate(samp_rate)
-        self.rtlsdr_source.set_center_freq(fc - shiftoff, 0)
+        self.rtlsdr_source.set_center_freq(self.fc - shiftoff, 0)
         self.rtlsdr_source.set_freq_corr(ppm, 0)
         self.rtlsdr_source.set_dc_offset_mode(2, 0)
         self.rtlsdr_source.set_iq_balance_mode(2, 0)
@@ -75,10 +75,10 @@ class Analyzer(gr.top_block):
         self.gsm_input = grgsm.gsm_input(
             ppm=0,
             osr=4,
-            fc=fc,
+            fc=self.fc,
             samp_rate_in=samp_rate,
         )
-        self.gsm_clock_offset_control = grgsm.clock_offset_control(fc-shiftoff)
+        self.gsm_clock_offset_control = grgsm.clock_offset_control(self.fc-shiftoff)
 
         #Control channel demapper for timeslot 0
         self.gsm_bcch_ccch_demapper_0 = grgsm.universal_ctrl_chans_demapper(0, ([2,6,12,16,22,26,32,36,42,46]), ([1,2,2,2,2,2,2,2,2,2]))
@@ -172,24 +172,24 @@ class Analyzer(gr.top_block):
 
     def set_fc(self, fc):
         self.fc = fc
-        if self.verbose or self.burst_file:
-            self.gsm_input.set_fc(self.fc)
+        # if self.verbose or self.burst_file:
+        # self.gsm_input.set_fc(self.fc)
 
     def get_arfcn(self):
         return self.arfcn
 
     def set_arfcn(self, arfcn):
         self.arfcn = arfcn
-        if self.verbose or self.burst_file:
-            self.gsm_receiver.set_cell_allocation([self.arfcn])
-            if options.band:
-                new_freq = grgsm.arfcn.arfcn2downlink(self.arfcn, self.band)
-            else:
-                for band in grgsm.arfcn.get_bands():
-                    if grgsm.arfcn.is_valid_arfcn(arfcn, band):
-                        new_freq = grgsm.arfcn.arfcn2downlink(arfcn, band)
-                        break
-            self.set_fc(new_freq)
+        # if self.verbose or self.burst_file:
+        #     self.gsm_receiver.set_cell_allocation([self.arfcn])
+        # if options.band:
+        #     new_freq = grgsm.arfcn.arfcn2downlink(self.arfcn, self.band)
+        # else:
+        for band in grgsm.arfcn.get_bands():
+            if grgsm.arfcn.is_valid_arfcn(arfcn, band):
+                new_freq = grgsm.arfcn.arfcn2downlink(arfcn, band)
+                break
+        self.set_fc(new_freq)
 
     def get_gain(self):
         return self.gain
@@ -238,7 +238,7 @@ if __name__ == '__main__':
 
     print("ARFCN: " + str(arfcn))
 
-    analyzer = Analyzer(fc=fc, gain=gain, samp_rate=sample_rate,
+    analyzer = Analyzer(gain=gain, samp_rate=sample_rate,
                         ppm=ppm, arfcn=arfcn, capture_id="test0",
                         udp_ports=[4729], rec_length=30, max_timeslot=2,
                         verbose=True, test=True)
