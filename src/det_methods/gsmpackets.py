@@ -12,7 +12,9 @@ class GSMTap(Packet):
                    XIntField("gsm_frame_number", 0),
                    XByteField("channel_type", 0),
                    XByteField("antenna_number", 0),
-                   XByteField("sub_slot", 0)]
+                   XByteField("sub_slot", 0),
+                   XByteField("end_junk", 0)]
+
 
     def guess_payload_class(self, payload):
         if self.channel_type == 2:
@@ -26,8 +28,8 @@ class CCCHCommon(Packet):
                    XByteField("message_type", 0)]
 
     def guess_payload_class(self, payload):
-        if self.message_type == 2:
-            return CCCHCommon
+        if self.message_type == 63:
+            return ImmediateAssignment
         else:
             return Raw
 
