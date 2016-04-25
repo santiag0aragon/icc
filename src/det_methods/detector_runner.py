@@ -47,26 +47,21 @@ if __name__ == '__main__':
         stop_freq = last_freq + 0.2e6 * channels_num
 
         print 'stop freq %s ' % stop_freq
-        while current_freq < stop_freq:
-            print 'current freq %s ' % current_freq
-            # silence rtl_sdr output:
-            # open 2 fds
-            null_fds = [os.open(os.devnull, os.O_RDWR) for x in xrange(2)]
-            # save the current file descriptors to a tuple
-            save = os.dup(1), os.dup(2)
-            # put /dev/null fds on 1 and 2
-            os.dup2(null_fds[0], 1)
-            os.dup2(null_fds[1], 2)
 
+        while current_freq < stop_freq:
+
+            print 'current freq %s ' % current_freq
 
             analyzer = Analyzer(fc=fc, gain=gain, samp_rate=sample_rate,
                         ppm=ppm, arfcn=arfcn, capture_id="test0",
                         udp_ports=[udp_port], rec_length=6, max_timeslot=2,
-                        verbose=False, test=False)
+                        verbose=True, test=False)
             analyzer.start()
+            print '5 %s ' % current_freq
             analyzer.wait()
             analyzer.stop()
-            scanner = None
+
+            analyzer = None
             current_freq += channels_num * 0.2e6
 
     detector.stop()

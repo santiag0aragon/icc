@@ -1,3 +1,4 @@
+#!/usr/local/bin/python
 # -*- coding: utf-8 -*-
 # @file
 # @author Piotr Krysik <ptrkrysik@gmail.com>
@@ -369,7 +370,7 @@ if __name__ == '__main__':
         stop_freq = last_freq + 0.2e6 * channels_num
 
         while current_freq < stop_freq:
-
+            print 'current freq %s ' % current_freq
             # silence rtl_sdr output:
             # open 2 fds
             null_fds = [os.open(os.devnull, os.O_RDWR) for x in xrange(2)]
