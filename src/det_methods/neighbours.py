@@ -50,7 +50,7 @@ class Mesh:
         return "<Mesh(edges='%s')>" % str(self.edges)
 
 
-def neighbours(found_list, info, verbose):
+def neighbours(found_list, verbose):
     mesh = Mesh()
     for info in sorted(found_list):
         mesh.add_vertex(info.arfcn)

@@ -18,7 +18,7 @@ def calc_distance(lat1, lon1, lat2, lon2):
 
     return (R * c) * 1000
 
-def tic(found_list, info, verbose):
+def tic(found_list, verbose):
 # Tower Information Consistency Check
     if len(found_list) > 0:
         print("Printing cell tower info and checking database....")
