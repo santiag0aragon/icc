@@ -364,7 +364,7 @@ if __name__ == '__main__':
     if options.band is "900M-Bands":
         to_scan = ['P-GSM',
                    'E-GSM',
-                   'R-GSM',
+                   # 'R-GSM',
                    #'GSM450',
                    #'GSM480',
                    #'GSM850',  Nothing found
@@ -449,6 +449,7 @@ if __name__ == '__main__':
                     cell_arfcn_list = scanner.gsm_extract_system_info.get_cell_arfcns(chans[i])
                     neighbour_list = scanner.gsm_extract_system_info.get_neighbours(chans[i])
 
+<<<<<<< b913f6a40ec42e3d8c2fea912c82c348a09822bb:src/scanner.py
                     info = ChannelInfo(grgsm.arfcn.downlink2arfcn(found_freqs[i], options.band), found_freqs[i], cell_ids[i], lacs[i], mccs[i], mncs[i], ccch_confs[i], powers[i], neighbour_list, cell_arfcn_list)
 
                     found_list[info.arfcn] = info
