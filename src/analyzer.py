@@ -5,7 +5,7 @@ from gnuradio.eng_option import eng_option
 from gnuradio.filter import firdes
 from math import pi
 from optparse import OptionParser
-
+import datetime as d
 import grgsm
 import osmosdr
 import pmt
@@ -46,14 +46,13 @@ class Analyzer(gr.top_block):
         self.gain = gain
         self.samp_rate = samp_rate
         self.ppm = ppm
-        self.arfcn = arfcn
+        # self.arfcn = arfcn
         self.band = band
         self.shiftoff = shiftoff = 400e3
         self.rec_length = rec_length
         self.store_capture = store_capture
         self.capture_id = capture_id
         self.udp_ports = udp_ports
-        self.verbose = verbose
 
         ##################################################
         # Processing Blocks
@@ -178,24 +177,24 @@ class Analyzer(gr.top_block):
 
     def set_fc(self, fc):
         self.fc = fc
-        if self.verbose or self.burst_file:
-            self.gsm_input.set_fc(self.fc)
+        # if self.verbose or self.burst_file:
+        # self.gsm_input.set_fc(self.fc)
 
     def get_arfcn(self):
         return self.arfcn
 
     def set_arfcn(self, arfcn):
         self.arfcn = arfcn
-        if self.verbose or self.burst_file:
-            self.gsm_receiver.set_cell_allocation([self.arfcn])
-            if options.band:
-                new_freq = grgsm.arfcn.arfcn2downlink(self.arfcn, self.band)
-            else:
-                for band in grgsm.arfcn.get_bands():
-                    if grgsm.arfcn.is_valid_arfcn(arfcn, band):
-                        new_freq = grgsm.arfcn.arfcn2downlink(arfcn, band)
-                        break
-            self.set_fc(new_freq)
+        # if self.verbose or self.burst_file:
+        #     self.gsm_receiver.set_cell_allocation([self.arfcn])
+        # if options.band:
+        #     new_freq = grgsm.arfcn.arfcn2downlink(self.arfcn, self.band)
+        # else:
+        for band in grgsm.arfcn.get_bands():
+            if grgsm.arfcn.is_valid_arfcn(arfcn, band):
+                new_freq = grgsm.arfcn.arfcn2downlink(arfcn, band)
+                break
+        self.set_fc(new_freq)
 
     def get_gain(self):
         return self.gain
