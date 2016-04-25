@@ -40,6 +40,7 @@ import time
 import src.det_methods.tic as tic
 import src.det_methods.neighbours as neigbours
 import src.aux.ch_info as ch_info
+from src.det_methods.analyzer import Analyzer
 
 #from wideband_receiver import *
 
@@ -319,6 +320,7 @@ if __name__ == '__main__':
 # Detection methods #
     parser.add_option("--no_TIC", action="store_true", default=False, help="Disable the tower information consistency checks.")
     parser.add_option("--no_neighbours", action="store_true", default=False, help="Disable the neighbours consistency checks.")
+    parser.add_option("--no_analyzer", action="store_true", default=False, help="Disable the in depth analysis of suspicious BTS.")
 #####################
     """
         Dont forget: sudo sysctl kernel.shmmni=32000
@@ -339,7 +341,7 @@ if __name__ == '__main__':
     if options.band is "900M-Bands":
         to_scan = ['P-GSM',
                    'E-GSM',
-                   'R-GSM',
+                   # 'R-GSM',
                    #'GSM450',
                    #'GSM480',
                    #'GSM850',  Nothing found
@@ -359,7 +361,7 @@ if __name__ == '__main__':
     if not options.no_neighbours:
         print "\tNeighbour Consistency Check"
 
-
+    arfcn_list = dict()
     for band in to_scan:
         options.band = band
         print "\nScanning band: %s"% band
@@ -416,21 +418,32 @@ if __name__ == '__main__':
                 ccch_confs = numpy.array(scanner.gsm_extract_system_info.get_ccch_conf())
                 powers = numpy.array(scanner.gsm_extract_system_info.get_pwrs())
 
-                found_list = []
+                found_list = dict()
                 for i in range(0, len(chans)):
                     cell_arfcn_list = scanner.gsm_extract_system_info.get_cell_arfcns(chans[i])
                     neighbour_list = scanner.gsm_extract_system_info.get_neighbours(chans[i])
 
                     info = ch_info.channel_info(grgsm.arfcn.downlink2arfcn(found_freqs[i], options.band), found_freqs[i], cell_ids[i], lacs[i], mccs[i], mncs[i], ccch_confs[i], powers[i], neighbour_list, cell_arfcn_list)
-                    found_list.append(info)
 
-# Detection methods #
-                if len(found_list) > 0:
+                    found_list[info.arfcn] = info
+
+# On-Line Detection methods #
+                if len(found_list.values()) > 0:
                     if not options.no_TIC:
-                        tic.tic(found_list, info, options.verbose)
+                        tic.tic(found_list.values(), options.verbose)
                     if not options.no_neighbours:
-                        neigbours.neighbours(found_list, info, options.verbose)
+                        neigbours.neighbours(found_list.values(), options.verbose)
+                arfcn_list.update(found_list)
 #####################
-
             scanner = None
             current_freq += channels_num * 0.2e6
+
+# In-Depth Detection methods #
+    if not options.no_analyzer:
+        print "Starting anaylzer for the following ARFCN %s " %arfcn_list.keys()
+        for arfcn in arfcn_list.keys():
+            an = Analyzer(arfcn, rec_length=6, test=True, max_timeslot=7)
+            an.start()
+            an.wait()
+            an.stop()
+            an = None
