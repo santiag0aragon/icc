@@ -15,12 +15,35 @@ class GSMTap(Packet):
                    XByteField("sub_slot", 0),
                    XByteField("end_junk", 0)]
 
-
     def guess_payload_class(self, payload):
         if self.channel_type == 2:
             return CCCHCommon
+        elif self.channel_type == 8:
+            return LAPDm
         else:
             return Raw
+
+
+class LAPDm(Packet):
+    name = "LAPDm"
+    fields_desc = [XByteField("address_field", 0),
+                   XByteField("control_field", 0),
+                   XByteField("len_field", 0)]
+
+    def guess_payload_class(self, payload):
+        if self.control_field == 100:
+            return GSMAIFDTAP
+        else:
+            return Raw
+
+
+class GSMAIFDTAP(Packet):
+    name = "GSMAIFDTAP"
+    fields_desc = [XByteField("rrmm", 0),
+                   XByteField("message_type", 0),
+                   XByteField("cipher_mode", 0), #Extract indivual bits for detailed information
+                  ]
+
 
 class CCCHCommon(Packet):
     name = "CCCHCommon"
@@ -32,6 +55,7 @@ class CCCHCommon(Packet):
             return ImmediateAssignment
         else:
             return Raw
+
 
 class ImmediateAssignment(Packet):
     name = "ImmediateAssignment"
