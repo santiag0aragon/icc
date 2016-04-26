@@ -24,6 +24,7 @@ class Analyzer(gr.top_block):
 
     def __init__(self, gain=None, samp_rate=None, ppm=None, arfcn=None, capture_id=None, udp_ports=[], max_timeslot=0, store_capture=True, verbose=False, band=None, rec_length=None, test=False, args=""):
 
+
         """
         capture_id = identifier for the capture used to store the files (e.g. <capture_id>.cfile)
         store_capture = boolean indicating if the capture should be stored on disk or not
