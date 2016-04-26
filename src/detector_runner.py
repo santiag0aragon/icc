@@ -30,7 +30,7 @@ if __name__ == '__main__':
     #                     udp_ports=[udp_port], rec_length=30, max_timeslot=2,
     #                     verbose=False, test=False)
     detector.start()
-    analyzer = Analyzer(13, rec_length=1000, test=False, max_timeslot=7, ppm=90, verbose=False, udp_ports=[udp_port])
+    analyzer = Analyzer(8, rec_length=1000, test=False, max_timeslot=7, ppm=90, verbose=False, udp_ports=[udp_port])
     analyzer.start()
     analyzer.wait()
     analyzer.stop()

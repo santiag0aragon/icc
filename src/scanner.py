@@ -369,14 +369,15 @@ if __name__ == '__main__':
         parser.error("Invalid sample rate. Sample rate must be an even numer * 0.2e6")
     channels_num = int(options.samp_rate/0.2e6)
     if options.band is "900M-Bands":
-        to_scan = ['P-GSM',
-                   'E-GSM',
-                   'R-GSM',
-                   'GSM450',
-                   'GSM480',
+        to_scan = [
+                    'P-GSM',
+                    'E-GSM',
+                   # 'R-GSM',
+                   # 'GSM450',
+                   # 'GSM480',
                    # 'GSM850',  Nothing found
-                   'DCS1800', #BTS found with kal
-                   'PCS1900', #Nothing interesting
+                   # 'DCS1800', #BTS found with kal
+                   # 'PCS1900', #Nothing interesting
                     ]
     else:
         to_scan = [options.band]
@@ -477,12 +478,11 @@ if __name__ == '__main__':
 # In-Depth Detection methods #
     if not options.no_analyzer:
         print "Starting anaylzer for the following ARFCN %s " %arfcn_list.keys()
-        udp_port = 2020
+        udp_port = 4729
         detector = Detector(udp_port)
         detector.start()
         for arfcn in arfcn_list.keys():
-
-            an = Analyzer(arfcn, udp_ports=[udp_port],rec_length=6, test=False, max_timeslot=7)
+            an = Analyzer(arfcn, udp_ports=[udp_port],rec_length=15, test=False, max_timeslot=7, ppm=90)
             an.start()
             an.wait()
             an.stop()
