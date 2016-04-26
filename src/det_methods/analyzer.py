@@ -22,7 +22,7 @@ Sends the decoded stuff to all ports in the udp port list
 
 class Analyzer(gr.top_block):
 
-    def __init__(self, arfcn,gain=0, samp_rate=2e6, ppm=0, capture_id="%s.cfile" % d.datetime.now(), udp_ports=[4729], max_timeslot=0, store_capture=True, verbose=False, band=None, rec_length=None, test=False, args=""):
+    def __init__(self, arfcn, gain=30, samp_rate=2e6, ppm=30, capture_id="%s.cfile" % d.datetime.now(), udp_ports=[4729], max_timeslot=0, store_capture=True, verbose=False, band=None, rec_length=None, test=False, args=""):
         """
         capture_id = identifier for the capture used to store the files (e.g. <capture_id>.cfile)
         store_capture = boolean indicating if the capture should be stored on disk or not

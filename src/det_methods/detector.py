@@ -5,7 +5,7 @@ from multiprocessing import Process
 
 class Detector:
 
-    def __init__(self, udp_port):
+    def __init__(self, udp_port=4729):
         """
         Parameters:
         hooks = list of functions to call with the received frame as argument
@@ -27,7 +27,19 @@ class Detector:
             self.handle_packet(data)
 
     def handle_packet(self, data):
-        print ':'.join(x.encode('hex') for x in data)
+        p = GSMTap(data)
+        if p.payload.name is 'LAPDm':
+            if p.payload.payload.name is 'GSMAIFDTAP' and p.payload.payload.message_type == 53:
+                print(type(p.payload.payload))
+                cipher = p.payload.payload.cipher_mode >> 1
+                if cipher == 0:
+                    print 'A5/1 detected'
+                elif cipher == 2:
+                    print 'A5/3 detected'
+                else:
+                    print 'cipher used %s:' %cipher
+
+        # print ':'.join(x.encode('hex') for x in data)
 
     def start(self):
         self.process = Process(target=self.listen)
@@ -41,6 +53,9 @@ if __name__ == '__main__':
         #parser = Parser(4729)
         #parser.listen()
         im_as_packet_dump = "02 04 01 00 03 f9 e2 00 00 1e 45 1d 02 00 04 00 2d 06 3f 10 0e 83 f9 7a c0 c5 02 00 c6 94 e0 a4 2b 2b 2b 2b 2b 2b 2b"
+        im_as_packet_dump = "02040102000de600001110120800000003640d0635016c71a2768d4d52734a7594ac93bba4ada9"
+        # im_as_packet_dump = "15 06 21 00 01 f0 2b 2b 2b 2b 2b 2b 2b 2b 2b 2b 2b 2b 2b 2b 2b 2b 2b"
+
         #p = GSMTap("02 04 01 00 03 f9 e1 00 00 06 07 ba 02 00 08 00 2d 06 3f 10 0e 83 f9 7e 54 48 01 00 c6 94 aa 34 2b 2b 2b 2b 2b 2b 2b".replace(' ', '').decode('hex'))
         p = GSMTap(im_as_packet_dump.replace(' ', '').decode('hex'))
         print p.version
@@ -54,9 +69,12 @@ if __name__ == '__main__':
         print p.channel_type
         print p.antenna_number
         print p.sub_slot
-        print p.payload.message_type
-        print hexdump(p)
+        # print p.payload.message_type
+        # print hexdump(p)
         print type(p.payload)
-        print hexdump(p.payload)
+        # print hexdump(p.payload)
         #print p.payload.encode('hex')
         print(type(p.payload.payload))
+        print bin(p.payload.payload.cipher_mode)
+        print p.payload.name
+
