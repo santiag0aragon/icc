@@ -39,6 +39,7 @@ import time
 
 from aux import ChannelInfo
 
+
 #from wideband_receiver import *
 
 class receiver_with_decoder(grgsm.hier_block):
@@ -364,12 +365,12 @@ if __name__ == '__main__':
     if options.band is "900M-Bands":
         to_scan = ['P-GSM',
                    'E-GSM',
-                   # 'R-GSM',
-                   #'GSM450',
-                   #'GSM480',
-                   #'GSM850',  Nothing found
-                   #'DCS1800', #BTS found with kal
-                   #'PCS1900', #Nothing interesting
+                   'R-GSM',
+                   'GSM450',
+                   'GSM480',
+                   # 'GSM850',  Nothing found
+                   'DCS1800', #BTS found with kal
+                   'PCS1900', #Nothing interesting
                     ]
     else:
         to_scan = [options.band]
@@ -386,6 +387,8 @@ if __name__ == '__main__':
         print "\tTower Information Consistency Check"
     if not options.no_neighbours:
         print "\tNeighbour Consistency Check"
+    if not options.no_analyzer:
+        print "\tIn-depth Analyzer "
 
     arfcn_list = dict()
     for band in to_scan:
@@ -449,7 +452,6 @@ if __name__ == '__main__':
                     cell_arfcn_list = scanner.gsm_extract_system_info.get_cell_arfcns(chans[i])
                     neighbour_list = scanner.gsm_extract_system_info.get_neighbours(chans[i])
 
-<<<<<<< b913f6a40ec42e3d8c2fea912c82c348a09822bb:src/scanner.py
                     info = ChannelInfo(grgsm.arfcn.downlink2arfcn(found_freqs[i], options.band), found_freqs[i], cell_ids[i], lacs[i], mccs[i], mncs[i], ccch_confs[i], powers[i], neighbour_list, cell_arfcn_list)
 
                     found_list[info.arfcn] = info
