@@ -43,6 +43,7 @@ import src.det_methods.tic as tic
 import src.det_methods.neighbours as neigbours
 import src.aux.ch_info as ch_info
 from src.det_methods.analyzer import Analyzer
+from src.det_methods.detector import Detector
 
 
 
@@ -477,9 +478,14 @@ if __name__ == '__main__':
 # In-Depth Detection methods #
     if not options.no_analyzer:
         print "Starting anaylzer for the following ARFCN %s " %arfcn_list.keys()
+        udp_port = 2020
+        detector = Detector(udp_port)
+        detector.start()
         for arfcn in arfcn_list.keys():
-            an = Analyzer(arfcn, rec_length=6, test=True, max_timeslot=7)
+
+            an = Analyzer(arfcn, udp_ports=[udp_port],rec_length=6, test=False, max_timeslot=7)
             an.start()
             an.wait()
             an.stop()
             an = None
+        detector.stop()
