@@ -5,7 +5,7 @@ from gnuradio.eng_option import eng_option
 from gnuradio.filter import firdes
 from math import pi
 from optparse import OptionParser
-
+import datetime as d
 import grgsm
 import osmosdr
 import pmt
@@ -23,6 +23,7 @@ Sends the decoded stuff to all ports in the udp port list
 class Analyzer(gr.top_block):
 
     def __init__(self, gain=None, samp_rate=None, ppm=None, arfcn=None, capture_id=None, udp_ports=[], max_timeslot=0, store_capture=True, verbose=False, band=None, rec_length=None, test=False, args=""):
+
         """
         capture_id = identifier for the capture used to store the files (e.g. <capture_id>.cfile)
         store_capture = boolean indicating if the capture should be stored on disk or not
@@ -42,18 +43,16 @@ class Analyzer(gr.top_block):
             if grgsm.arfcn.is_valid_arfcn(self.arfcn, band):
                 self.fc = grgsm.arfcn.arfcn2downlink(arfcn, band)
                 break
-
         self.gain = gain
         self.samp_rate = samp_rate
         self.ppm = ppm
-        self.arfcn = arfcn
+        # self.arfcn = arfcn
         self.band = band
         self.shiftoff = shiftoff = 400e3
         self.rec_length = rec_length
         self.store_capture = store_capture
         self.capture_id = capture_id
         self.udp_ports = udp_ports
-        self.verbose = verbose
 
         ##################################################
         # Processing Blocks
@@ -178,24 +177,24 @@ class Analyzer(gr.top_block):
 
     def set_fc(self, fc):
         self.fc = fc
-        if self.verbose or self.burst_file:
-            self.gsm_input.set_fc(self.fc)
+        # if self.verbose or self.burst_file:
+        # self.gsm_input.set_fc(self.fc)
 
     def get_arfcn(self):
         return self.arfcn
 
     def set_arfcn(self, arfcn):
         self.arfcn = arfcn
-        if self.verbose or self.burst_file:
-            self.gsm_receiver.set_cell_allocation([self.arfcn])
-            if options.band:
-                new_freq = grgsm.arfcn.arfcn2downlink(self.arfcn, self.band)
-            else:
-                for band in grgsm.arfcn.get_bands():
-                    if grgsm.arfcn.is_valid_arfcn(arfcn, band):
-                        new_freq = grgsm.arfcn.arfcn2downlink(arfcn, band)
-                        break
-            self.set_fc(new_freq)
+        # if self.verbose or self.burst_file:
+        #     self.gsm_receiver.set_cell_allocation([self.arfcn])
+        # if options.band:
+        #     new_freq = grgsm.arfcn.arfcn2downlink(self.arfcn, self.band)
+        # else:
+        for band in grgsm.arfcn.get_bands():
+            if grgsm.arfcn.is_valid_arfcn(arfcn, band):
+                new_freq = grgsm.arfcn.arfcn2downlink(arfcn, band)
+                break
+        self.set_fc(new_freq)
 
     def get_gain(self):
         return self.gain
