@@ -124,6 +124,7 @@ def cli(ctx, samplerate, ppm, gain, speed):
 @click.option('--band', '-b', default="900M-Bands")
 @click.option('--rec_time_sec', '-r', default=10)
 @click.option('--analyze' , '-a', is_flag=True)
+@click.option('--location' , '-l', type=str, default='52°14'22' N 6°51'25' E')
 @click.pass_context
 def scan(ctx, band, rec_time_sec, analyze):
     if band != "900M-Bands":
@@ -153,7 +154,7 @@ def scan(ctx, band, rec_time_sec, analyze):
 
     #Add scan to database
     Base.metadata.create_all(engine)
-    runner = Runner(bands=to_scan, sample_rate=args['samplerate'], ppm=args['ppm'], gain=args['gain'], speed=args['speed'], rec_time_sec=rec_time_sec, current_location)
+    runner = Runner(bands=to_scan, sample_rate=args['samplerate'], ppm=args['ppm'], gain=args['gain'], speed=args['speed'], rec_time_sec=rec_time_sec, current_location=args['location'])
     runner.start(analyze=analyze)
 
 if __name__ == "__main__":
