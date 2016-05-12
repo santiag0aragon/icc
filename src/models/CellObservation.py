@@ -1,4 +1,5 @@
 from sqlalchemy import *
+from sqlalchemy.orm import relationship
 from functools import partial
 from database import Base
 
@@ -23,3 +24,4 @@ class CellObservation(Base):
     # neighbours = neighbours
     # cell_arfcns = cell_arfcns
     scan_id = NotNullColumn(UUID(), ForeignKey('scans.id'))
+    scan = relationship("Scan", backref="cell_observations")

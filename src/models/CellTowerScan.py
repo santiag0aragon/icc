@@ -1,6 +1,7 @@
 from sqlalchemy import *
 from functools import partial
 from database import Base
+from sqlalchemy.orm import relationship
 
 from UUID import id_column, UUID
 
@@ -12,6 +13,7 @@ class CellTowerScan(Base):
     __tablename__ = 'celltowerscans'
     id = id_column()
     cellobservation_id = NotNullColumn(UUID(), ForeignKey('cellobservations.id'))
+    relationship("CellObservation", backref="cell_tower_scans")
     sample_rate = NotNullColumn(Float)
     rec_time_sec = NotNullColumn(Integer)
     timestamp = NotNullColumn(DateTime(True))

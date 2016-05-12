@@ -25,7 +25,7 @@ class Detector:
         print ':'.join(x.encode('hex') for x in data)
 
     def on_finish(self):
-        return {"s_rank" : 0, "name"  : "default_detector"}
+        return {"s_rank" : 0, "detector_name"  : "default_detector"}
 
     def start(self):
         self.process = Process(target=self.listen)

@@ -43,7 +43,7 @@ class Runner():
         found = self.doScan(lat, lon)
         rankings ={}
         if analyze and not (lat is None or lon is None):
-            self.doCellInfoChecks(lat, lon, found)
+            rankings.update(self.doCellInfoChecks(lat, lon, found))
         random.shuffle(found)
         for ch in found:
             cellobs = CellObservation(freq=ch.freq, lac=ch.lac, mnc=ch.mnc, mcc=ch.mcc, arfcn=ch.arfcn, cid=ch.cid, scan_id=self.scan_id, power=ch.power)
@@ -52,12 +52,25 @@ class Runner():
             if analyze:
                 self.analyze(cellobs.id, detection=detection)
 
+        scan_obj = db_session.query(Scan).filter(Scan.id == self.scan_id).one()
+        co_list = sorted(scan_obj.cell_observations, lambda x,y: x.s_rank - y.s_rank)
+        #print the cell observation, and ask if a longer scan on one of the towers should be performed
+        for index, co in enumerate(co_list):
+            print "#{} | Rank: {} | ARFCN: {} | Freq: {} | LAC: {} | MCC: {} | MNC: {} | Power: {}".format(index, co.s_rank, co.arfcn, co.freq, co.lac, co.mcc, co.mnc, co.power)
+
+        while click.confirm('Do you want to perform an additional scan on one of the displayed towers?'):
+            index = click.prompt('Enter the index of the cell tower you want to scan', type=int)
+            rec_time = click.prompt('Enter the scan duration in seconds', type=int)
+            self.rec_time_sec = rec_time
+            self.analyze(co_list[index].id, detection=False)
+
     def doCellInfoChecks(self, lat, lon, channel_infos=[]):
         tic(channel_infos,lat,lon)
         neighbours(channel_infos)
 
     def analyze(self, cellobs_id, detection=True):
         print "analyzing"
+        total_rank = 0
         db_session = session_class()
         try:
             cell_obs = db_session.query(CellObservation).filter(CellObservation.id == cellobs_id).one()
@@ -87,6 +100,10 @@ class Runner():
             #proc.terminate()
             print "detector stopped"
             print rankings
+            for r in rankings:
+                total_rank += r['s_rank']
+            cell_obs.s_rank = total_rank
+
         else:
             analyzer = Analyzer(gain=self.gain, samp_rate=self.sample_rate,
                                 ppm=self.ppm, arfcn=cell_obs.arfcn, capture_id=cellscan.getCaptureFileName(),
