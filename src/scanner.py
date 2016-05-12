@@ -365,11 +365,11 @@ if __name__ == '__main__':
         to_scan = ['P-GSM',
                    'E-GSM',
                    'R-GSM',
-                   #'GSM450',
-                   #'GSM480',
-                   #'GSM850',  Nothing found
-                   #'DCS1800', #BTS found with kal
-                   #'PCS1900', #Nothing interesting
+                   'GSM450',
+                   'GSM480',
+                   # 'GSM850',  Nothing found
+                   'DCS1800', #BTS found with kal
+                   'PCS1900', #Nothing interesting
                     ]
     else:
         to_scan = [options.band]
@@ -386,6 +386,8 @@ if __name__ == '__main__':
         print "\tTower Information Consistency Check"
     if not options.no_neighbours:
         print "\tNeighbour Consistency Check"
+    if not options.no_analyzer:
+        print "\tIn-depth Analyzer "
 
     arfcn_list = dict()
     for band in to_scan:
@@ -456,3 +458,4 @@ if __name__ == '__main__':
 
             scanner = None
             current_freq += channels_num * 0.2e6
+

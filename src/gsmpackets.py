@@ -33,8 +33,6 @@ class LAPDm(Packet):
     def guess_payload_class(self, payload):
         if self.control_field == 100:
             return GSMAIFDTAP
-        elif self.control_field == 32:
-            return
         else:
             return Raw
 
@@ -48,7 +46,7 @@ class GSMAIFDTAP(Packet):
         if self.message_type == 53:
             return CipherModeCommand
         elif self.control_field == 24:
-            return
+            return IdentityRequest
         else:
             return Raw
 

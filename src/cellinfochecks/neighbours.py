@@ -50,7 +50,9 @@ class Mesh:
         return "<Mesh(edges='%s')>" % str(self.edges)
 
 
+
 def neighbours(found_list, verbose=True):
+
     mesh = Mesh()
     for info in sorted(found_list):
         if info.arfcn not in mesh.vertices():
