@@ -22,11 +22,7 @@ Sends the decoded stuff to all ports in the udp port list
 
 class Analyzer(gr.top_block):
 
-<<<<<<< 62c89acf4f2525f6fd2a44248b2f96ffb356f532:src/analyzer.py
     def __init__(self, gain=None, samp_rate=None, ppm=None, arfcn=None, capture_id=None, udp_ports=[], max_timeslot=0, store_capture=True, verbose=False, band=None, rec_length=None, test=False, args=""):
-=======
-    def __init__(self, arfcn, gain=30, samp_rate=2e6, ppm=30, capture_id="%s.cfile" % d.datetime.now(), udp_ports=[4729], max_timeslot=0, store_capture=True, verbose=False, band=None, rec_length=None, test=False, args=""):
->>>>>>> indepth analysis test:src/det_methods/analyzer.py
         """
         capture_id = identifier for the capture used to store the files (e.g. <capture_id>.cfile)
         store_capture = boolean indicating if the capture should be stored on disk or not
@@ -46,7 +42,6 @@ class Analyzer(gr.top_block):
             if grgsm.arfcn.is_valid_arfcn(self.arfcn, band):
                 self.fc = grgsm.arfcn.arfcn2downlink(arfcn, band)
                 break
-
         self.gain = gain
         self.samp_rate = samp_rate
         self.ppm = ppm
