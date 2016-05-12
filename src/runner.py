@@ -14,6 +14,7 @@ import osmosdr
 import pmt
 import time
 import datetime
+import random
 from multiprocessing import Process
 import click
 
@@ -38,6 +39,7 @@ class Runner():
         db_session = session_class()
         found = self.doScan()
         self.doCellInfoChecks(found, current_location)
+        random.shuffle(found)
         for ch in found:
             cellobs = CellObservation(freq=ch.freq, lac=ch.lac, mnc=ch.mnc, mcc=ch.mcc, arfcn=ch.arfcn, cid=ch.cid, scan_id=self.scan_id, power=ch.power)
             db_session.add(cellobs)
