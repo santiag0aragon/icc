@@ -24,7 +24,7 @@ from scanner import scan
 from cellinfochecks import *
 from aux.lat_log_utils import parse_dms
 class Runner():
-    def __init__(self, bands, sample_rate, ppm, gain, speed, rec_time_sec):
+    def __init__(self, bands, sample_rate, ppm, gain, speed, rec_time_sec, current_location):
         self.bands = bands
         self.sample_rate = sample_rate
         self.ppm = ppm
@@ -33,16 +33,16 @@ class Runner():
         self.scan_id = None
         self.rec_time_sec = rec_time_sec
 
-    def start(self, analyze=True, detection=False):
+    def start(self, current_location, analyze=True, detection=False):
         db_session = session_class()
         found = self.doScan()
-        self.doCellInfoChecks(found)
+        self.doCellInfoChecks(found, current_location)
         for ch in found:
             cellobs = CellObservation(freq=ch.freq, lac=ch.lac, mnc=ch.mnc, mcc=ch.mcc, arfcn=ch.arfcn, cid=ch.cid, scan_id=self.scan_id, power=ch.power)
             db_session.add(cellobs)
             db_session.commit()
             if analyze:
-                self.analyze(cellobs.id, ch, detection=detection)
+                self.analyze(cellobs.id, ch, current_location, detection=detection)
 
     def doCellInfoChecks(self, current_location, channel_infos=[]):
         loc = parse_dms(current_location)
@@ -51,7 +51,7 @@ class Runner():
         tic(channel_infos,lat,lon)
         neighbours(channel_infos)
 
-    def analyze(self, cellobs_id, ch, detection=True):
+    def analyze(self, cellobs_id, ch, current_location, detection=True):
         print "analyzing"
         db_session = session_class()
         cellscan = CellTowerScan(cellobservation_id=cellobs_id, sample_rate=self.sample_rate, rec_time_sec=self.rec_time_sec, timestamp=datetime.datetime.now())
@@ -61,7 +61,7 @@ class Runner():
         if detection:
             detector_man = DetectorManager(udp_port=udp_port)
             proc = Process(target=detector_man.start)
-            proc.start()
+            proc.start(current_location)
             analyzer = Analyzer(gain=self.gain, samp_rate=self.sample_rate,
                                 ppm=self.ppm, arfcn=ch.arfcn, capture_id=cellscan.getCaptureFileName(),
                                 udp_ports=[udp_port], rec_length=self.rec_time_sec, max_timeslot=2,
@@ -147,5 +147,5 @@ if __name__ == "__main__":
 
     #Add scan to database
     Base.metadata.create_all(engine)
-    runner = Runner(bands=to_scan, sample_rate=options.samp_rate, ppm=options.ppm, gain=options.gain, speed=options.speed, rec_time_sec=10)
+    runner = Runner(bands=to_scan, sample_rate=options.samp_rate, ppm=options.ppm, gain=options.gain, speed=options.speed, rec_time_sec=10, current_location)
     runner.start(analyze=False)
