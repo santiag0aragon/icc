@@ -22,7 +22,7 @@ from analyzer import Analyzer
 from detector_manager import DetectorManager
 from scanner import scan
 from cellinfochecks import *
-
+from aux.lat_log_utils import parse_dms
 class Runner():
     def __init__(self, bands, sample_rate, ppm, gain, speed, rec_time_sec):
         self.bands = bands
@@ -44,8 +44,11 @@ class Runner():
             if analyze:
                 self.analyze(cellobs.id, ch, detection=detection)
 
-    def doCellInfoChecks(self, channel_infos=[]):
-        tic(channel_infos)
+    def doCellInfoChecks(self, current_location, channel_infos=[]):
+        loc = parse_dms(current_location)
+        lat = loc[0]
+        lon = loc[1]
+        tic(channel_infos,lat,lon)
         neighbours(channel_infos)
 
     def analyze(self, cellobs_id, ch, detection=True):
