@@ -14,7 +14,6 @@ class DetectorManager():
         self.detectors = []
 
     def addDetector(self, detector):
-        print self.running
         if not isinstance(detector, Detector) or self.running is True:
             print "Could not add Detector to DetectorManager"
             return
@@ -35,6 +34,11 @@ class DetectorManager():
 
     def stop(self):
         self.running = False
-        self.sock.shutdown()
+        try:
+            self.sock.shutdown(socket.SHUT_RDWR)
+        except:
+            pass
+        rankings = []
         for detector in self.detectors:
-            detector.on_finish()
+            rankings.append(detector.on_finish())
+        return rankings

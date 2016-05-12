@@ -39,7 +39,6 @@ import time
 
 from aux import ChannelInfo
 
-
 #from wideband_receiver import *
 
 class receiver_with_decoder(grgsm.hier_block):
