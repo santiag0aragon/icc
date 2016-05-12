@@ -19,6 +19,7 @@ class CellObservation(Base):
     mnc = NotNullColumn(Integer)
     # ccch_conf = ccch_conf
     power = NotNullColumn(Integer)
+    s_rank = NotNullColumn(Integer, default=0)
     # neighbours = neighbours
     # cell_arfcns = cell_arfcns
     scan_id = NotNullColumn(UUID(), ForeignKey('scans.id'))

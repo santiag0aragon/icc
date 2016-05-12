@@ -5,14 +5,10 @@ from multiprocessing import Process
 
 class Detector:
 
-    def __init__(self, udp_port):
+    def __init__(self):
         """
         Parameters:
         """
-        self.udp_port = udp_port
-        self.sock = None
-        self.running = False
-        self.process = None
 
     def listen(self):
 
@@ -29,7 +25,7 @@ class Detector:
         print ':'.join(x.encode('hex') for x in data)
 
     def on_finish(self):
-        pass
+        return {"s_rank" : 0, "name"  : "default_detector"}
 
     def start(self):
         self.process = Process(target=self.listen)

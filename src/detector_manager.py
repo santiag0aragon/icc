@@ -34,6 +34,11 @@ class DetectorManager():
 
     def stop(self):
         self.running = False
-        self.sock.shutdown()
+        try:
+            self.sock.shutdown(socket.SHUT_RDWR)
+        except:
+            pass
+        rankings = []
         for detector in self.detectors:
-            detector.on_finish()
+            rankings.append(detector.on_finish())
+        return rankings
