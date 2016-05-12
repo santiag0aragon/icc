@@ -53,9 +53,10 @@ class Mesh:
 def neighbours(found_list, verbose=True):
     mesh = Mesh()
     for info in sorted(found_list):
-        mesh.add_vertex(info.arfcn)
-        for neighbour in info.neighbours:
-            mesh.add_edge((info.arfcn, neighbour))
+        if info.arfcn not in mesh.vertices():
+            mesh.add_vertex(info.arfcn)
+            for neighbour in info.neighbours:
+                mesh.add_edge((info.arfcn, neighbour))
     for vertex in mesh.vertices():
         if len(mesh.find_edges_from(vertex)) == 0:
             print "Cell '%s' has no neighbours" % vertex
