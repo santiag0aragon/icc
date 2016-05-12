@@ -117,8 +117,8 @@ class Analyzer(gr.top_block):
             self.blocks_file_sink.set_unbuffered(False)
 
         #Printer for printing messages when verbose flag is True
-        if self.verbose:
-            self.gsm_message_printer = grgsm.message_printer(pmt.intern(""), False)
+        # if self.verbose:
+        #     self.gsm_message_printer = grgsm.message_printer(pmt.intern(""), False)
 
         """
         if self.verbose:
@@ -162,9 +162,9 @@ class Analyzer(gr.top_block):
                 self.msg_connect((self.gsm_control_channels_decoders[i], 'msgs'), (client_socket, 'pdus'))
 
         #Connect the printer is self.verbose is True
-        if self.verbose:
-            for i in range(0,max_timeslot + 1):
-                self.msg_connect((self.gsm_control_channels_decoders[i], 'msgs'), (self.gsm_message_printer, 'msgs'))
+        # if self.verbose:
+        #     for i in range(0,max_timeslot + 1):
+        #         self.msg_connect((self.gsm_control_channels_decoders[i], 'msgs'), (self.gsm_message_printer, 'msgs'))
 
         """
         if self.verbose:

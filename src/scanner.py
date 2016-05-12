@@ -37,14 +37,7 @@ import osmosdr
 import pmt
 import time
 
-
 from aux import ChannelInfo
-import src.det_methods.tic as tic
-import src.det_methods.neighbours as neigbours
-import src.aux.ch_info as ch_info
-from src.det_methods.analyzer import Analyzer
-from src.det_methods.detector import Detector
-
 
 #from wideband_receiver import *
 
@@ -369,15 +362,14 @@ if __name__ == '__main__':
         parser.error("Invalid sample rate. Sample rate must be an even numer * 0.2e6")
     channels_num = int(options.samp_rate/0.2e6)
     if options.band is "900M-Bands":
-        to_scan = [
-                    'P-GSM',
-                    'E-GSM',
-                   # 'R-GSM',
-                   # 'GSM450',
-                   # 'GSM480',
-                   # 'GSM850',  Nothing found
-                   # 'DCS1800', #BTS found with kal
-                   # 'PCS1900', #Nothing interesting
+        to_scan = ['P-GSM',
+                   'E-GSM',
+                   'R-GSM',
+                   #'GSM450',
+                   #'GSM480',
+                   #'GSM850',  Nothing found
+                   #'DCS1800', #BTS found with kal
+                   #'PCS1900', #Nothing interesting
                     ]
     else:
         to_scan = [options.band]
@@ -394,8 +386,6 @@ if __name__ == '__main__':
         print "\tTower Information Consistency Check"
     if not options.no_neighbours:
         print "\tNeighbour Consistency Check"
-    if not options.no_analyzer:
-        print "\tIn-depth Analyzer "
 
     arfcn_list = dict()
     for band in to_scan:
@@ -464,27 +454,5 @@ if __name__ == '__main__':
                     found_list[info.arfcn] = info
                     print info.arfcn
 
-# On-Line Detection methods #
-                if len(found_list.values()) > 0:
-                    if not options.no_TIC:
-                        tic.tic(found_list.values(), options.verbose)
-                    if not options.no_neighbours:
-                        neigbours.neighbours(found_list.values(), options.verbose)
-                arfcn_list.update(found_list)
-#####################
             scanner = None
             current_freq += channels_num * 0.2e6
-
-# In-Depth Detection methods #
-    if not options.no_analyzer:
-        print "Starting anaylzer for the following ARFCN %s " %arfcn_list.keys()
-        udp_port = 4729
-        detector = Detector(udp_port)
-        detector.start()
-        for arfcn in arfcn_list.keys():
-            an = Analyzer(arfcn, udp_ports=[udp_port],rec_length=15, test=False, max_timeslot=7, ppm=90)
-            an.start()
-            an.wait()
-            an.stop()
-            an = None
-        detector.stop()

@@ -1,3 +1,4 @@
+ # -*- coding: utf-8 -*-
 from gnuradio import blocks
 from gnuradio import gr
 from gnuradio import eng_notation
@@ -24,7 +25,14 @@ from detector_manager import DetectorManager
 from scanner import scan as sscan
 from cellinfochecks import *
 from aux.lat_log_utils import parse_dms
+from id_request_detector import IDRequestDetector
+from a5_detector import A5Detector
+from detector import Detector
+
+
 class Runner():
+
+
     def __init__(self, bands, sample_rate, ppm, gain, speed, rec_time_sec, current_location):
         self.bands = bands
         self.sample_rate = sample_rate
@@ -33,26 +41,27 @@ class Runner():
         self.speed = speed
         self.scan_id = None
         self.rec_time_sec = rec_time_sec
+        self.current_location = current_location
 
-    def start(self, current_location, analyze=True, detection=False):
+    def start(self, analyze=True, detection=False):
         db_session = session_class()
         found = self.doScan()
-        self.doCellInfoChecks(found, current_location)
+        self.doCellInfoChecks(found)
         for ch in found:
             cellobs = CellObservation(freq=ch.freq, lac=ch.lac, mnc=ch.mnc, mcc=ch.mcc, arfcn=ch.arfcn, cid=ch.cid, scan_id=self.scan_id, power=ch.power)
             db_session.add(cellobs)
             db_session.commit()
             if analyze:
-                self.analyze(cellobs.id, ch, current_location, detection=detection)
+                self.analyze(cellobs.id, ch, detection=detection)
 
-    def doCellInfoChecks(self, current_location, channel_infos=[]):
-        loc = parse_dms(current_location)
+    def doCellInfoChecks(self, channel_infos=[]):
+        loc = parse_dms(self.current_location)
         lat = loc[0]
         lon = loc[1]
         tic(channel_infos,lat,lon)
         neighbours(channel_infos)
 
-    def analyze(self, cellobs_id, ch, current_location, detection=True):
+    def analyze(self, cellobs_id, ch, detection=True):
         print "analyzing"
         db_session = session_class()
         cellscan = CellTowerScan(cellobservation_id=cellobs_id, sample_rate=self.sample_rate, rec_time_sec=self.rec_time_sec, timestamp=datetime.datetime.now())
@@ -61,17 +70,20 @@ class Runner():
         udp_port = 2333
         if detection:
             detector_man = DetectorManager(udp_port=udp_port)
+            id_req = IDRequestDetector()
+            a5_det =A5Detector()
+            detector_man.addDetector(IDRequestDetector())
             proc = Process(target=detector_man.start)
-            proc.start(current_location)
+            proc.start()
             analyzer = Analyzer(gain=self.gain, samp_rate=self.sample_rate,
                                 ppm=self.ppm, arfcn=ch.arfcn, capture_id=cellscan.getCaptureFileName(),
-                                udp_ports=[udp_port], rec_length=self.rec_time_sec, max_timeslot=2,
+                                udp_ports=[udp_port], rec_length=self.rec_time_sec, max_timeslot=8,
                                 verbose=False, test=False)
             analyzer.start()
             analyzer.wait()
             analyzer.stop()
             print "analyzer stopped"
-            #detector_man.stop()
+            # detector_man.stop()
             print "detector stopping..."
 
             proc.terminate()
@@ -79,7 +91,7 @@ class Runner():
         else:
             analyzer = Analyzer(gain=self.gain, samp_rate=self.sample_rate,
                                 ppm=self.ppm, arfcn=ch.arfcn, capture_id=cellscan.getCaptureFileName(),
-                                udp_ports=[udp_port], rec_length=self.rec_time_sec, max_timeslot=2,
+                                udp_ports=[udp_port], rec_length=self.rec_time_sec, max_timeslot=8,
                                 verbose=False, test=True)
             analyzer.start()
             analyzer.wait()
@@ -124,9 +136,9 @@ def cli(ctx, samplerate, ppm, gain, speed):
 @click.option('--band', '-b', default="900M-Bands")
 @click.option('--rec_time_sec', '-r', default=10)
 @click.option('--analyze' , '-a', is_flag=True)
-@click.option('--location' , '-l', type=str, default='52°14'22' N 6°51'25' E')
+@click.option('--location' , '-l', type=str, default='52\°14\'22\' N 6\°51\'25\' E')
 @click.pass_context
-def scan(ctx, band, rec_time_sec, analyze):
+def scan(ctx, band, rec_time_sec, analyze, location):
     if band != "900M-Bands":
         if band not in grgsm.arfcn.get_bands():
             print "Invalid GSM band\n"
@@ -146,7 +158,6 @@ def scan(ctx, band, rec_time_sec, analyze):
         to_scan = [band]
 
 
-
     print "GSM bands to be scanned:\n"
     print "\t", "\n\t".join(to_scan)
 
@@ -154,8 +165,8 @@ def scan(ctx, band, rec_time_sec, analyze):
 
     #Add scan to database
     Base.metadata.create_all(engine)
-    runner = Runner(bands=to_scan, sample_rate=args['samplerate'], ppm=args['ppm'], gain=args['gain'], speed=args['speed'], rec_time_sec=rec_time_sec, current_location=args['location'])
-    runner.start(analyze=analyze)
+    runner = Runner(bands=to_scan, sample_rate=args['samplerate'], ppm=args['ppm'], gain=args['gain'], speed=args['speed'], rec_time_sec=rec_time_sec, current_location=location)
+    runner.start(analyze=analyze, detection=True)
 
 if __name__ == "__main__":
     cli.add_command(scan)
