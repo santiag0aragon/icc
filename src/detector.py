@@ -26,19 +26,7 @@ class Detector:
             self.handle_packet(data)
 
     def handle_packet(self, data):
-        p = GSMTap(data)
-        if p.payload.name is 'LAPDm':
-            if p.payload.payload.name is 'GSMAIFDTAP' and p.payload.payload.message_type == 53:
-                print(type(p.payload.payload))
-                cipher = p.payload.payload.cipher_mode >> 1
-                if cipher == 0:
-                    print 'A5/1 detected'
-                elif cipher == 2:
-                    print 'A5/3 detected'
-                else:
-                    print 'cipher used %s:' %cipher
-
-        # print ':'.join(x.encode('hex') for x in data)
+        print ':'.join(x.encode('hex') for x in data)
 
     def on_finish():
         pass

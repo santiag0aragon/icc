@@ -14,6 +14,7 @@ class DetectorManager():
         self.detectors = []
 
     def addDetector(self, detector):
+        print self.running
         if not isinstance(detector, Detector) or self.running is True:
             print "Could not add Detector to DetectorManager"
             return
