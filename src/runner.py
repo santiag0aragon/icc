@@ -18,6 +18,7 @@ import random
 from multiprocessing import Process
 from threading import Thread
 import click
+from sqlalchemy import desc
 
 from database import *
 from models import *
@@ -198,6 +199,22 @@ def scan(ctx, band, rec_time_sec, analyze, detection, location):
     runner = Runner(bands=to_scan, sample_rate=args['samplerate'], ppm=args['ppm'], gain=args['gain'], speed=args['speed'], rec_time_sec=rec_time_sec, current_location=location)
     runner.start(lat, lon, analyze=analyze, detection=detection)
 
+@click.command(help='Prints the saved scans')
+@click.option('--limit', '-n', help='Limit the number of results returned', default=10)
+@click.option('--printscans/--no-printscans', default=False)
+def listScans(limit, printscans):
+    db_session = session_class()
+    scans = db_session.query(Scan).order_by(desc(Scan.timestamp)).limit(limit).all()
+    for s in scans:
+        print "Scan# {} - {} - lat: {} lon: {}".format(s.timestamp, s.bands, s.latitude, s.longitude)
+        for co in s.cell_observations:
+            print "--- Cell tower observation# ARFCN: {} | Freq: {} | Susp. Rank: {} | LAC: {} | MCC: {} | MNC: {} | Power: {}".format(co.arfcn, co.freq, co.s_rank, co.lac, co.mcc, co.mnc, co.power)
+            if printscans:
+                for ts in co.celltowerscans:
+                    print "------ Cell tower scan# {} | Rec. time: {} | UUID: {}".format(ts.timestamp, ts.rec_time_sec, ts.id)
+                print ""
+        print ""
 if __name__ == "__main__":
     cli.add_command(scan)
+    cli.add_command(listScans)
     cli(obj={})

@@ -25,3 +25,4 @@ class CellObservation(Base):
     # cell_arfcns = cell_arfcns
     scan_id = NotNullColumn(UUID(), ForeignKey('scans.id'))
     scan = relationship("Scan", backref="cell_observations")
+    celltowerscans = relationship('CellTowerScan')
