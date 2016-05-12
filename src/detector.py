@@ -28,7 +28,7 @@ class Detector:
     def handle_packet(self, data):
         print ':'.join(x.encode('hex') for x in data)
 
-    def on_finish():
+    def on_finish(self):
         pass
 
     def start(self):
