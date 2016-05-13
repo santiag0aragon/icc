@@ -1,5 +1,6 @@
 from scapy.all import *
 
+
 class GSMTap(Packet):
     name = "GSMTap header"
     fields_desc = [XByteField("version", 0),
@@ -7,7 +8,7 @@ class GSMTap(Packet):
                    XByteField("payload_type", 0),
                    XByteField("timeslot", 0, ),
                    XShortField("arfcn", 0),
-                   XByteField("signal_level", 0), #Returns wrong value, should be signed
+                   XByteField("signal_level", 0),  # Returns wrong value, should be signed
                    XByteField("signal_noise_ratio", 0),
                    XIntField("gsm_frame_number", 0),
                    XByteField("channel_type", 0),
@@ -16,7 +17,9 @@ class GSMTap(Packet):
                    XByteField("end_junk", 0)]
 
     def guess_payload_class(self, payload):
-        if self.channel_type == 2:
+        if self.channel_type == 1:
+            return BCCHCommon
+        elif self.channel_type == 2:
             return CCCHCommon
         elif self.channel_type == 8:
             return LAPDm
@@ -104,5 +107,5 @@ class CCCHCommon(Packet):
 class ImmediateAssignment(Packet):
     name = "ImmediateAssignment"
     fields_desc = [XByteField("junk", 2),
-                   XByteField("packet_channel_description", 6) #Extract indivual bits for detailed information
-                  ]
+                   XByteField("packet_channel_description", 6)  # Extract indivual bits for detailed information
+                   ]

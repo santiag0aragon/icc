@@ -1,19 +1,20 @@
 from sqlalchemy import *
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, deferred, backref
 from functools import partial
 from database import Base
 
-#Prevents setting Not Null on each NotNullColumn
+from UUID import id_column
+
+# Prevents setting Not Null on each NotNullColumn
 NotNullColumn = partial(Column, nullable=False)
+
 
 class Scan(Base):
     __tablename__ = 'scans'
-    id = NotNullColumn(Integer, primary_key=True)
+    id = id_column()
     timestamp = NotNullColumn(DateTime(True))
     bands = NotNullColumn(String)
     latitude = Column(Float)
     longitude = Column(Float)
 
-    def getScanCaptureFileName():
+    def getScanCaptureFileName(self):
         return "scan_{}_{}.file".format(self.id, str(self.timestamp))
