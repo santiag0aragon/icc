@@ -28,6 +28,8 @@ from scanner import scan as sscan
 from cellinfochecks import *
 from aux.lat_log_utils import parse_dms
 from detector import Detector
+from a5_detector import A5Detector
+from id_request_detector import IDRequestDetector
 
 class Runner():
     def __init__(self, bands, sample_rate, ppm, gain, speed, rec_time_sec, current_location):
@@ -68,6 +70,7 @@ class Runner():
     def doCellInfoChecks(self, lat, lon, channel_infos=[]):
         tic(channel_infos,lat,lon)
         neighbours(channel_infos)
+        return dict() # add the dict to return
 
     def analyze(self, cellobs_id, detection=True):
         print "analyzing"
@@ -85,6 +88,8 @@ class Runner():
         if detection:
             detector_man = DetectorManager(udp_port=udp_port)
             detector_man.addDetector(Detector())
+            detector_man.addDetector(A5Detector())
+            detector_man.addDetector(IDRequestDetector())
             proc = Thread(target=detector_man.start)
             proc.start()
             analyzer = Analyzer(gain=self.gain, samp_rate=self.sample_rate,
@@ -126,6 +131,7 @@ class Runner():
         db_session.add(scan_obj)
         db_session.commit()
         self.scan_id = scan_obj.id
+
         return sscan(bands=self.bands, sample_rate=self.sample_rate, ppm=self.ppm, gain=self.gain, speed=self.speed)
 
 @click.group()

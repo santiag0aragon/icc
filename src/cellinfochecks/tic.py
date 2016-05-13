@@ -22,6 +22,8 @@ def tic(found_list, current_lat=52.2311057, current_lon=6.8553815, range_multipl
 # Tower Information Consistency Check
     if len(found_list) > 0:
         print("Printing cell tower info and checking database....")
+        # return {"s_rank" : 0, "detector_name"  : "tic"}
+        result = dict()
         for info in sorted(found_list):
             print info
             if verbose:
@@ -32,9 +34,13 @@ def tic(found_list, current_lat=52.2311057, current_lon=6.8553815, range_multipl
                 distance = calc_distance(tower.lat, tower.lon, current_lat, current_lon)
                 if distance > (tower.range * range_multiplier):
                     print(" Cell tower found in database, but in wrong location %d m (range %d m)"%(distance, tower.range))
+                    result.append({'s_rank' : 1, 'detector_name'  : 'tic', 'arfcn': info.arfcn})
                 else:
+                    result.append({'s_rank' : 0, 'detector_name'  : 'tic', 'arfcn': info.arfcn})
                     print(" Cell tower found in database")
             else:
+                result.append({'s_rank' : 2, 'detector_name'  : 'tic', 'arfcn': info.arfcn})
                 print(" No match found in database")
     else:
         print("No cell towers found...")
+    return result
