@@ -26,7 +26,7 @@ from analyzer import Analyzer
 from detector_manager import DetectorManager
 from scanner import scan as sscan
 from cellinfochecks import *
-from aux.lat_log_utils import parse_dms
+from aux.lat_log_utils import parse_dms, getgps
 from detector import Detector
 from a5_detector import A5Detector
 from id_request_detector import IDRequestDetector
@@ -160,8 +160,9 @@ def cli(ctx, samplerate, ppm, gain, speed):
 @click.option('--analyze' , '-a', is_flag=True)
 @click.option('--detection' , '-d', is_flag=True)
 @click.option('--location' , '-l', type=str, default='', prompt=True)
+@click.option('--use_gps', '-g', is_flag=True)
 @click.pass_context
-def scan(ctx, band, rec_time_sec, analyze, detection, location):
+def scan(ctx, band, rec_time_sec, analyze, detection, location, use_gps):
     """
     Note: if no location is specified, analysis of found towers is off
     :param detection: determines if druing analysis the packet based detectors are run
@@ -188,12 +189,16 @@ def scan(ctx, band, rec_time_sec, analyze, detection, location):
     args=ctx.obj
     lat = None
     lon = None
-    try:
-        loc = parse_dms(location)
-        lat = loc[0]
-        lon = loc[1]
-    except:
-        print "Warning: no valid location specified. Cell tower consistency checks will be disabled in the analysis phase."
+    if use_gps:
+        lat, lon = getgps()
+        print "Use location:", lat, lon
+    else:
+        try:
+            loc = parse_dms(location)
+            lat = loc[0]
+            lon = loc[1]
+        except:
+            print "Warning: no valid location specified. Cell tower consistency checks will be disabled in the analysis phase."
 
 
     print "GSM bands to be scanned:\n"

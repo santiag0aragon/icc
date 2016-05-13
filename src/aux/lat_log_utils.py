@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 import re
+import math
+
+from gps import *
 
 def dms2dd(degrees, minutes, seconds, direction):
     dd = float(degrees) + float(minutes)/60 + float(seconds)/(60*60);
@@ -20,3 +23,10 @@ def parse_dms(dms):
     lng = dms2dd(parts[4], parts[5], parts[6], parts[7])
 
     return (lat, lng)
+
+def getgps():
+    gpsd = gps(mode=WATCH_ENABLE)
+    while gpsd.fix.latitude == 0.:
+        gpsd.next()
+
+    return (gpsd.fix.latitude, gpsd.fix.longitude)
