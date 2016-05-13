@@ -174,7 +174,7 @@ class Runner():
 
 @click.group()
 @click.option('--ppm', '-p', default=0)
-@click.option('--samplerate', '-sr', default=2000000.052982, type=float)
+@click.option('--samplerate', '-sr', default=2e6, type=float)
 @click.option('--gain', '-g', type=float, default=30.0)
 @click.option('--speed', '-s', type=int, default=4)
 @click.pass_context
@@ -183,9 +183,9 @@ def cli(ctx, samplerate, ppm, gain, speed):
         print "Invalid scan speed.\n"
         raise click.Abort
 
-    #if (samplerate / 0.2e6) % 2 != 0:
-    #    print "Invalid sample rate. Sample rate must be an even numer * 0.2e6"
-    #    return
+    if (samplerate / 0.2e6) % 2 != 0:
+        print "Invalid sample rate. Sample rate must be an even numer * 0.2e6"
+        raise click.Abort
 
     ctx.obj['samplerate'] = samplerate
     ctx.obj['ppm'] = ppm
