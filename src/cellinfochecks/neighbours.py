@@ -51,6 +51,7 @@ class Mesh:
 
 
 def neighbours(found_list, verbose=True):
+    #TODO return a list of TowerRanks for each ChannelInfo object
     mesh = Mesh()
     for info in sorted(found_list):
         if info.arfcn not in mesh.vertices():
@@ -65,3 +66,4 @@ def neighbours(found_list, verbose=True):
         #     print "Cell only has few neighbours"
         if len(mesh.find_edges_to(vertex)) == 0:
             print "Cell '%s' is not referenced in the network" % vertex
+    return []
