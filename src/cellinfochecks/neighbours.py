@@ -1,4 +1,5 @@
 from collections import deque
+from TowerRank import TowerRank
 
 
 class Mesh:
@@ -50,20 +51,30 @@ class Mesh:
         return "<Mesh(edges='%s')>" % str(self.edges)
 
 
-def neighbours(found_list, verbose=True):
-    #TODO return a list of TowerRanks for each ChannelInfo object
+min_submash_size = 3
+
+
+def neighbours(found_list):
+    ranks = []
+    info_map = {}
     mesh = Mesh()
     for info in sorted(found_list):
+        info_map[info.arfn] = info
         if info.arfcn not in mesh.vertices():
             mesh.add_vertex(info.arfcn)
             for neighbour in info.neighbours:
                 mesh.add_edge((info.arfcn, neighbour))
     for vertex in mesh.vertices():
+        rank = 0
+        comment = None
         if len(mesh.find_edges_from(vertex)) == 0:
-            print "Cell '%s' has no neighbours" % vertex
-        # submesh = mesh.find_submesh(vertex)
-        # if submesh.size() < 3: # TODO: heuristics
-        #     print "Cell only has few neighbours"
-        if len(mesh.find_edges_to(vertex)) == 0:
-            print "Cell '%s' is not referenced in the network" % vertex
-    return []
+            rank = 2
+            comment = "Cell '%s' has no neighbours" % vertex
+        if rank < 2 and len(mesh.find_edges_to(vertex)) == 0:
+            rank = 2
+            comment = "Cell '%s' is not referenced in the network" % vertex
+        if rank < 1 and mesh.find_submesh(vertex).size() < min_submash_size:
+            rank = 1
+            comment = "Cell only has few neighbours"
+        ranks.append(TowerRank(rank, 'neighbours', comment, info_map[vertex].cellobservation_id))
+    return ranks
