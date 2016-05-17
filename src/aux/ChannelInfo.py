@@ -11,6 +11,7 @@ class ChannelInfo(object):
         self.power = power
         self.neighbours = neighbours
         self.cell_arfcns = cell_arfcns
+        self.cellobservation_id = None
 
     def get_verbose_info(self):
         i = "  |---- Configuration: %s\n" % self.get_ccch_conf()

@@ -1,5 +1,6 @@
 import query_cell_tower as CellTower
 import math
+from TowerRank import TowerRank
 
 def calc_distance(lat1, lon1, lat2, lon2):
     # approximate radius of earth in km
@@ -20,11 +21,12 @@ def calc_distance(lat1, lon1, lat2, lon2):
 
 def tic(found_list, current_lat=52.2311057, current_lon=6.8553815, range_multiplier=1, verbose=True):
 # Tower Information Consistency Check
+    ranks = []
+
     if len(found_list) > 0:
         print("Printing cell tower info and checking database....")
-        # return {"s_rank" : 0, "detector_name"  : "tic"}
-        result = dict()
         for info in sorted(found_list):
+            rank = 0
             print info
             if verbose:
                 print info.get_verbose_info()
@@ -34,13 +36,14 @@ def tic(found_list, current_lat=52.2311057, current_lon=6.8553815, range_multipl
                 distance = calc_distance(tower.lat, tower.lon, current_lat, current_lon)
                 if distance > (tower.range * range_multiplier):
                     print(" Cell tower found in database, but in wrong location %d m (range %d m)"%(distance, tower.range))
-                    result.append({'s_rank' : 1, 'detector_name'  : 'tic', 'arfcn': info.arfcn})
+                    rank = 1
                 else:
-                    result.append({'s_rank' : 0, 'detector_name'  : 'tic', 'arfcn': info.arfcn})
                     print(" Cell tower found in database")
             else:
-                result.append({'s_rank' : 2, 'detector_name'  : 'tic', 'arfcn': info.arfcn})
                 print(" No match found in database")
+                rank = 1
+            ranks.append(TowerRank(detector='tic', s_rank = rank, cellobservation_id = info.cellobservation_id))
     else:
         print("No cell towers found...")
-    return result
+
+    return ranks
