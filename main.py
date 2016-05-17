@@ -90,4 +90,5 @@ def createdb():
 if __name__ == "__main__":
     cli.add_command(scan)
     cli.add_command(listScans)
+    cli.add_command(createdb)
     cli(obj={})
