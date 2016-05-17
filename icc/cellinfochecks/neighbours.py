@@ -7,8 +7,8 @@ class Mesh:
         self.edges = {}
 
     def add_vertex(self, vertex):
-        assert vertex not in self.edges
-        self.edges[vertex] = set()
+        if vertex not in self.edges:
+            self.edges[vertex] = set()
 
     def add_edge(self, edge):
         (src, dst) = edge
@@ -30,7 +30,7 @@ class Mesh:
             if current_vertex in self.edges:
                 for next_vertex in self.edges[current_vertex]:
                     submesh.add_edge((current_vertex, next_vertex))
-                    if next_vertex not in submesh.edges:
+                    if next_vertex in self.edges and next_vertex not in submesh.edges:
                         vertex_queue.append(next_vertex)
         return submesh
 
@@ -61,14 +61,13 @@ def neighbours(found_list):
     mesh = Mesh()
     for info in sorted(found_list):
         info_map[info.arfcn] = info
-        if info.arfcn not in mesh.vertices():
-            mesh.add_vertex(info.arfcn)
-            for neighbour in info.neighbours:
-                mesh.add_edge((info.arfcn, neighbour))
+        mesh.add_vertex(info.arfcn)
+        for neighbour in info.neighbours:
+            mesh.add_edge((info.arfcn, neighbour))
     for vertex in mesh.vertices():
         rank = 0
         comment = None
-        if len(mesh.find_edges_from(vertex)) == 0:
+        if len(mesh.find_edges_from(vertex)) == 0:  # TODO: can be 0 due to inconsistent tower scan
             rank = 2
             comment = "Cell '%s' has no neighbours" % vertex
         if rank < 2 and len(mesh.find_edges_to(vertex)) == 0:

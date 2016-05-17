@@ -91,7 +91,7 @@ class Runner():
             self.analyze(co_list[index].id, detection=False)
 
     def doCellInfoChecks(self, lat, lon, channel_infos=[]):
-        ranks = tic(channel_infos,lat,lon) #+ neighbours(channel_infos)
+        ranks = tic(channel_infos,lat,lon) + neighbours(channel_infos)
         return ranks
 
     def analyze(self, cellobs_id, detection=True):
