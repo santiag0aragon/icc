@@ -196,3 +196,6 @@ def listScans(limit, printscans):
                     print "------ Cell tower scan# {} | Rec. time: {} | UUID: {} | Samplerate: {}".format(ts.timestamp, ts.rec_time_sec, ts.id, ts.sample_rate)
                 print ""
         print ""
+
+def createDatabase():
+    Base.metadata.create_all(engine)

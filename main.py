@@ -1,4 +1,4 @@
-from icc.runner import Runner
+from icc.runner import Runner, createDatabase
 from icc.runner import listScans as lc
 from icc.aux.lat_log_utils import parse_dms
 import grgsm
@@ -82,6 +82,10 @@ def scan(ctx, band, rec_time_sec, analyze, detection, location, lat, lon):
 @click.option('--printscans/--no-printscans', default=False)
 def listScans(limit, printscans):
     lc(limit, printscans)
+
+@click.command()
+def createdb():
+    createDatabase()
 
 if __name__ == "__main__":
     cli.add_command(scan)
