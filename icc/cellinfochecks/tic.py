@@ -19,7 +19,7 @@ def calc_distance(lat1, lon1, lat2, lon2):
 
     return (R * c) * 1000
 
-def tic(found_list, current_lat=52.2311057, current_lon=6.8553815, range_multiplier=1, verbose=True):
+def tic(found_list, current_lat=52.2311057, current_lon=6.8553815, range_multiplier=1, verbose=False):
 # Tower Information Consistency Check
     ranks = []
 
@@ -29,7 +29,7 @@ def tic(found_list, current_lat=52.2311057, current_lon=6.8553815, range_multipl
         for info in sorted(found_list):
             rank = 0
             comment = ""
-            print info
+            #print info
             if verbose:
                 print info.get_verbose_info()
             towers = CellTower.queryTower(info.mcc, info.mnc, info.cid)

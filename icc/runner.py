@@ -56,7 +56,6 @@ class Runner():
                 s_ranks += self.analyze(cellobs.id, detection=detection)
         scan_obj = db_session.query(Scan).filter(Scan.id == self.scan_id).one()
         #Perform offline checks
-
         if not (lat is None or lon is None):
             print "Performing offline checks..."
             s_ranks = self.doCellInfoChecks(lat, lon, found)
@@ -69,7 +68,7 @@ class Runner():
             else:
                 obs_ranks[s.cellobs_id] = [s]
 
-        for cellobs_id, ranks in obs_ranks:
+        for cellobs_id, ranks in obs_ranks.iteritems():
             try:
                 co = db_session.query(CellObservation).filter(CellObservation.id == cellobs_id).one()
                 co.s_rank = sum([x.s_rank for x in ranks])
@@ -91,7 +90,7 @@ class Runner():
             self.analyze(co_list[index].id, detection=False)
 
     def doCellInfoChecks(self, lat, lon, channel_infos=[]):
-        ranks = tic(channel_infos,lat,lon) + neighbours(channel_infos)
+        ranks = tic(channel_infos,lat,lon) #+ neighbours(channel_infos)
         return ranks
 
     def analyze(self, cellobs_id, detection=True):

@@ -30,7 +30,7 @@ class Detector:
         print ':'.join(x.encode('hex') for x in data)
 
     def on_finish(self):
-        return TowerRank(self.s_rank, self.name, self.comment, self.cellobservation_id)
+        return TowerRank(self.s_rank, self.name, self.comment, self.cellobs_id)
 
     def start(self):
         self.process = Process(target=self.listen)

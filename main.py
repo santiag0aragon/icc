@@ -1,6 +1,7 @@
 from icc.runner import Runner
 from icc.runner import listScans as lc
 from icc.aux.lat_log_utils import parse_dms
+import grgsm
 import click
 
 @click.group()
@@ -72,7 +73,7 @@ def scan(ctx, band, rec_time_sec, analyze, detection, location, lat, lon):
     print "\t", "\n\t".join(to_scan)
 
     #Add scan to database
-    #Base.metadata.create_all(engine)
+    #
     runner = Runner(bands=to_scan, sample_rate=args['samplerate'], ppm=args['ppm'], gain=args['gain'], speed=args['speed'], rec_time_sec=rec_time_sec, current_location=location)
     runner.start(lat, lon, analyze=analyze, detection=detection)
 

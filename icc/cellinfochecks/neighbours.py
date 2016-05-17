@@ -1,5 +1,5 @@
 from collections import deque
-from TowerRank import TowerRank
+from icc.aux import TowerRank
 
 
 class Mesh:
@@ -27,10 +27,11 @@ class Mesh:
         while len(vertex_queue) != 0:
             current_vertex = vertex_queue.pop()
             submesh.add_vertex(current_vertex)
-            for next_vertex in self.edges[current_vertex]:
-                submesh.add_edge((current_vertex, next_vertex))
-                if next_vertex not in submesh.edges:
-                    vertex_queue.append(next_vertex)
+            if current_vertex in self.edges:
+                for next_vertex in self.edges[current_vertex]:
+                    submesh.add_edge((current_vertex, next_vertex))
+                    if next_vertex not in submesh.edges:
+                        vertex_queue.append(next_vertex)
         return submesh
 
     def find_edges_from(self, vertex):
@@ -59,7 +60,7 @@ def neighbours(found_list):
     info_map = {}
     mesh = Mesh()
     for info in sorted(found_list):
-        info_map[info.arfn] = info
+        info_map[info.arfcn] = info
         if info.arfcn not in mesh.vertices():
             mesh.add_vertex(info.arfcn)
             for neighbour in info.neighbours:
