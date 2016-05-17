@@ -316,8 +316,11 @@ def scan(bands=[], sample_rate=2e6, ppm=0, gain=30.0, speed=4):
 
                     info = ChannelInfo(grgsm.arfcn.downlink2arfcn(found_freqs[i], band), found_freqs[i], cell_ids[i], lacs[i], mccs[i], mncs[i], ccch_confs[i], powers[i], neighbour_list, cell_arfcn_list)
 
-                    found_list.append(info)
-                    print info.arfcn
+                    if info.arfcn:
+                        found_list.append(info)
+                        print info.arfcn
+                    else:
+                        print 'Skipping `None`...'
 
             scanner = None
             current_freq += channels_num * 0.2e6
