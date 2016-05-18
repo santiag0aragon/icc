@@ -28,6 +28,9 @@ from scanner import scan as sscan
 from cellinfochecks import *
 from aux.lat_log_utils import parse_dms
 from detector import Detector
+from a5_detector import A5Detector
+from id_request_detector import IDRequestDetector
+from cell_reselection_offset import CellReselectionOffsetDetector
 from cellinfochecks import TowerRank
 
 class Runner():
@@ -109,7 +112,10 @@ class Runner():
         udp_port = 2333
         if detection:
             detector_man = DetectorManager(udp_port=udp_port)
-            detector_man.addDetector(Detector())
+            detector_man.addDetector(Detector('test_detector', cellobs_id))
+            detector_man.addDetector(A5Detector('a5_detector', cellobs_id))
+            detector_man.addDetector(IDRequestDetector('id_request_detector', cellobs_id))
+            detector_man.addDetector(CellReselectionOffsetDetector('c2_request_detector', cellobs_id))
             proc = Thread(target=detector_man.start)
             proc.start()
             # silence rtl_sdr output:
@@ -140,7 +146,7 @@ class Runner():
 
             #proc.terminate()
             print "detector stopped"
-            print rankings
+            print s_ranks
             # for r in rankings:
             #     total_rank += r['s_rank']
             # cell_obs.s_rank = total_rank

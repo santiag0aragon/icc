@@ -5,7 +5,9 @@ from multiprocessing import Process
 from aux import TowerRank
 
 class Detector:
-
+    SUSPICIOUS = 2
+    UNKNOWN = 1
+    NOT_SUSPICIOUS = 0
     def __init__(self, name, cellobs_id):
         """
         Parameters:
@@ -25,6 +27,9 @@ class Detector:
         while True:
             data, addr = self.sock.recvfrom(1024) # buffer size is 1024 bytes
             self.handle_packet(data)
+
+    def update_s_rank(self, new_s_rank):
+        self.s_rank = new_s_rank if new_s_rank > self.s_rank else self.s_rank
 
     def handle_packet(self, data):
         print ':'.join(x.encode('hex') for x in data)
