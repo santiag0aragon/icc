@@ -2,13 +2,18 @@ import socket
 from scapy.all import *
 from gsmpackets import *
 from multiprocessing import Process
+from aux import TowerRank
 
 class Detector:
 
-    def __init__(self):
+    def __init__(self, name, cellobs_id):
         """
         Parameters:
         """
+        self.s_rank = 0
+        self.name = name
+        self.comment = ""
+        self.cellobs_id = cellobs_id
 
     def listen(self):
 
@@ -25,7 +30,7 @@ class Detector:
         print ':'.join(x.encode('hex') for x in data)
 
     def on_finish(self):
-        return {"s_rank" : 0, "detector_name"  : "default_detector"}
+        return TowerRank(self.s_rank, self.name, self.comment, self.cellobs_id)
 
     def start(self):
         self.process = Process(target=self.listen)

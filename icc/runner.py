@@ -44,6 +44,8 @@ class Runner():
         db_session = session_class()
         found = self.doScan(lat, lon)
 
+        s_ranks = []
+
         random.shuffle(found)
         for ch in found:
             cellobs = CellObservation(freq=ch.freq, lac=ch.lac, mnc=ch.mnc, mcc=ch.mcc, arfcn=ch.arfcn, cid=ch.cid, scan_id=self.scan_id, power=ch.power)
@@ -51,27 +53,36 @@ class Runner():
             db_session.commit()
             ch.cellobservation_id = cellobs.id
             if analyze:
-                self.analyze(cellobs.id, detection=detection)
+                s_ranks += self.analyze(cellobs.id, detection=detection)
         scan_obj = db_session.query(Scan).filter(Scan.id == self.scan_id).one()
         #Perform offline checks
-
         if not (lat is None or lon is None):
             print "Performing offline checks..."
-            for r in self.doCellInfoChecks(lat, lon, found):
-                print r
-                try:
-                    co = db_session.query(CellObservation).filter(CellObservation.id == r.cellobservation_id).one()
-                    co.s_rank = r.s_rank
-                    db_session.commit()
-                except (NoResultFound, MultipleResultsFound) as e:
-                    print "cell observation not found in database during rank update"
+            s_ranks = self.doCellInfoChecks(lat, lon, found)
 
+        #Merge the ranks for each detector on cellobs_id
+        obs_ranks = {}
+        for s in s_ranks:
+            if s.cellobs_id in obs_ranks:
+                obs_ranks[s.cellobs_id].append(s)
+            else:
+                obs_ranks[s.cellobs_id] = [s]
 
+        for cellobs_id, ranks in obs_ranks.iteritems():
+            try:
+                co = db_session.query(CellObservation).filter(CellObservation.id == cellobs_id).one()
+                co.s_rank = sum([x.s_rank for x in ranks])
+                db_session.commit()
+            except (NoResultFound, MultipleResultsFound) as e:
+                print "cell observation not found in database during rank update"
 
         co_list = sorted(scan_obj.cell_observations, lambda x,y: x.s_rank - y.s_rank, reverse=True)
         #print the cell observation, and ask if a longer scan on one of the towers should be performed
         for index, co in enumerate(co_list):
             print "#{} | Rank: {} | ARFCN: {} | Freq: {} | LAC: {} | MCC: {} | MNC: {} | Power: {}".format(index, co.s_rank, co.arfcn, co.freq, co.lac, co.mcc, co.mnc, co.power)
+            if co.id in obs_ranks:
+                for tr in obs_ranks[co.id]:
+                    print "--- Detector: {} | Rank: {} | Comment: {}".format(tr.detector, tr.s_rank, tr.comment)
 
         while click.confirm('Do you want to perform an additional scan on one of the displayed towers?'):
             index = click.prompt('Enter the index of the cell tower you want to scan', type=int)
@@ -85,7 +96,7 @@ class Runner():
 
     def analyze(self, cellobs_id, detection=True):
         print "analyzing"
-        total_rank = 0
+        s_ranks = []
         db_session = session_class()
         try:
             cell_obs = db_session.query(CellObservation).filter(CellObservation.id == cellobs_id).one()
@@ -124,7 +135,7 @@ class Runner():
             os.close(null_fds[1])
 
             print "analyzer stopped"
-            rankings = detector_man.stop()
+            s_ranks = detector_man.stop()
             print "detector stopping..."
 
             #proc.terminate()
@@ -158,6 +169,8 @@ class Runner():
             os.close(null_fds[1])
             print "analyzer stopped"
 
+        return s_ranks
+
 
     def doScan(self, lat=None, lon=None):
         """
@@ -172,82 +185,6 @@ class Runner():
         self.scan_id = scan_obj.id
         return sscan(bands=self.bands, sample_rate=self.sample_rate, ppm=self.ppm, gain=self.gain, speed=self.speed)
 
-@click.group()
-@click.option('--ppm', '-p', default=0)
-@click.option('--samplerate', '-sr', default=2e6, type=float)
-@click.option('--gain', '-g', type=float, default=30.0)
-@click.option('--speed', '-s', type=int, default=4)
-@click.pass_context
-def cli(ctx, samplerate, ppm, gain, speed):
-    if speed < 0 or speed > 5:
-        print "Invalid scan speed.\n"
-        raise click.Abort
-
-    if (samplerate / 0.2e6) % 2 != 0:
-        print "Invalid sample rate. Sample rate must be an even numer * 0.2e6"
-        raise click.Abort
-
-    ctx.obj['samplerate'] = samplerate
-    ctx.obj['ppm'] = ppm
-    ctx.obj['gain'] = gain
-    ctx.obj['speed'] = speed
-
-@click.command()
-@click.option('--band', '-b', default="900M-Bands")
-@click.option('--rec_time_sec', '-r', default=10)
-@click.option('--analyze' , '-a', is_flag=True)
-@click.option('--detection' , '-d', is_flag=True)
-@click.option('--location' , '-l', type=str, default='')
-@click.option('--lat', type=float)
-@click.option('--lon', type=float)
-@click.pass_context
-def scan(ctx, band, rec_time_sec, analyze, detection, location, lat, lon):
-    """
-    Note: if no location is specified, analysis of found towers is off
-    :param detection: determines if druing analysis the packet based detectors are run
-    """
-    if band != "900M-Bands":
-        if band not in grgsm.arfcn.get_bands():
-            print "Invalid GSM band\n"
-            return
-
-    if band == "900M-Bands":
-        to_scan = ['P-GSM',
-                   'E-GSM',
-                   'R-GSM',
-                   #'GSM450',
-                   #'GSM480',
-                   #'GSM850',  Nothing found
-                   #'DCS1800', #BTS found with kal
-                   #'PCS1900', #Nothing interesting
-                    ]
-    else:
-        to_scan = [band]
-
-
-    args=ctx.obj
-
-    try:
-        loc = parse_dms(location)
-        lat = loc[0]
-        lon = loc[1]
-    except:
-        pass
-    if lat is None or lon is None:
-        print "Warning: no valid location specified. Cell tower consistency checks will be disabled in the analysis phase."
-
-
-    print "GSM bands to be scanned:\n"
-    print "\t", "\n\t".join(to_scan)
-
-    #Add scan to database
-    Base.metadata.create_all(engine)
-    runner = Runner(bands=to_scan, sample_rate=args['samplerate'], ppm=args['ppm'], gain=args['gain'], speed=args['speed'], rec_time_sec=rec_time_sec, current_location=location)
-    runner.start(lat, lon, analyze=analyze, detection=detection)
-
-@click.command(help='Prints the saved scans')
-@click.option('--limit', '-n', help='Limit the number of results returned', default=10)
-@click.option('--printscans/--no-printscans', default=False)
 def listScans(limit, printscans):
     db_session = session_class()
     scans = db_session.query(Scan).order_by(desc(Scan.timestamp)).limit(limit).all()
@@ -260,7 +197,6 @@ def listScans(limit, printscans):
                     print "------ Cell tower scan# {} | Rec. time: {} | UUID: {} | Samplerate: {}".format(ts.timestamp, ts.rec_time_sec, ts.id, ts.sample_rate)
                 print ""
         print ""
-if __name__ == "__main__":
-    cli.add_command(scan)
-    cli.add_command(listScans)
-    cli(obj={})
+
+def createDatabase():
+    Base.metadata.create_all(engine)
