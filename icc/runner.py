@@ -86,12 +86,12 @@ class Runner():
             if co.id in obs_ranks:
                 for tr in obs_ranks[co.id]:
                     print "--- Detector: {} | Rank: {} | Comment: {}".format(tr.detector, tr.s_rank, tr.comment)
-
-        while click.confirm('Do you want to perform an additional scan on one of the displayed towers?'):
-            index = click.prompt('Enter the index of the cell tower you want to scan', type=int)
-            rec_time = click.prompt('Enter the scan duration in seconds', type=int)
-            self.rec_time_sec = rec_time
-            self.analyze(co_list[index].id, detection=False)
+        if len(co_list) > 0:
+            while click.confirm('Do you want to perform an additional scan on one of the displayed towers?'):
+                index = click.prompt('Enter the index of the cell tower you want to scan', type=int)
+                rec_time = click.prompt('Enter the scan duration in seconds', type=int)
+                self.rec_time_sec = rec_time
+                self.analyze(co_list[index].id, detection=False)
 
     def doCellInfoChecks(self, lat, lon, channel_infos=[]):
         ranks = tic(channel_infos,lat,lon) + neighbours(channel_infos)
