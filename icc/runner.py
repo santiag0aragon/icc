@@ -61,7 +61,7 @@ class Runner():
         #Perform offline checks
         if not (lat is None or lon is None):
             print "Performing offline checks..."
-            s_ranks = self.doCellInfoChecks(lat, lon, found)
+            s_ranks += self.doCellInfoChecks(lat, lon, found)
 
         #Merge the ranks for each detector on cellobs_id
         obs_ranks = {}
