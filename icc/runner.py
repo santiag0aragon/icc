@@ -43,7 +43,7 @@ class Runner():
         self.scan_id = None
         self.rec_time_sec = rec_time_sec
 
-    def start(self, lat=None, lon=None, analyze=True, detection=True):
+    def start(self, lat=None, lon=None, analyze=True, detection=True, mute=True):
         db_session = session_class()
         found = self.doScan(lat, lon)
 
@@ -56,7 +56,7 @@ class Runner():
             db_session.commit()
             ch.cellobservation_id = cellobs.id
             if analyze:
-                s_ranks += self.analyze(cellobs.id, detection=detection)
+                s_ranks += self.analyze(cellobs.id, detection=detection, mute=mute)
         scan_obj = db_session.query(Scan).filter(Scan.id == self.scan_id).one()
         #Perform offline checks
         if not (lat is None or lon is None):
@@ -97,7 +97,7 @@ class Runner():
         ranks = tic(channel_infos,lat,lon) + neighbours(channel_infos)
         return ranks
 
-    def analyze(self, cellobs_id, detection=True):
+    def analyze(self, cellobs_id, detection=True, mute=True):
         print "analyzing"
         s_ranks = []
         db_session = session_class()
@@ -118,14 +118,15 @@ class Runner():
             detector_man.addDetector(CellReselectionOffsetDetector('c2_request_detector', cellobs_id))
             proc = Thread(target=detector_man.start)
             proc.start()
-            # silence rtl_sdr output:
-            # open 2 fds
-            null_fds = [os.open(os.devnull, os.O_RDWR) for x in xrange(2)]
-            # save the current file descriptors to a tuple
-            save = os.dup(1), os.dup(2)
-            # put /dev/null fds on 1 and 2
-            os.dup2(null_fds[0], 1)
-            os.dup2(null_fds[1], 2)
+            if mute:
+                # silence rtl_sdr output:
+                # open 2 fds
+                null_fds = [os.open(os.devnull, os.O_RDWR) for x in xrange(2)]
+                # save the current file descriptors to a tuple
+                save = os.dup(1), os.dup(2)
+                # put /dev/null fds on 1 and 2
+                os.dup2(null_fds[0], 1)
+                os.dup2(null_fds[1], 2)
             analyzer = Analyzer(gain=self.gain, samp_rate=self.sample_rate,
                                 ppm=self.ppm, arfcn=cell_obs.arfcn, capture_id=cellscan.getCaptureFileName(),
                                 udp_ports=[udp_port], rec_length=self.rec_time_sec, max_timeslot=2,
@@ -133,12 +134,13 @@ class Runner():
             analyzer.start()
             analyzer.wait()
             analyzer.stop()
-            # restore file descriptors so we can print the results
-            os.dup2(save[0], 1)
-            os.dup2(save[1], 2)
-            # close the temporary fds
-            os.close(null_fds[0])
-            os.close(null_fds[1])
+            if mute:
+                # restore file descriptors so we can print the results
+                os.dup2(save[0], 1)
+                os.dup2(save[1], 2)
+                # close the temporary fds
+                os.close(null_fds[0])
+                os.close(null_fds[1])
 
             print "analyzer stopped"
             s_ranks = detector_man.stop()

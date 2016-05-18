@@ -17,17 +17,6 @@ class Detector:
         self.comment = ""
         self.cellobs_id = cellobs_id
 
-    def listen(self):
-
-        UDP_IP = "127.0.0.1"
-        self.sock = socket.socket(socket.AF_INET, # Internet
-        socket.SOCK_DGRAM) # UDP
-        self.sock.bind((UDP_IP, self.udp_port))
-
-        while True:
-            data, addr = self.sock.recvfrom(1024) # buffer size is 1024 bytes
-            self.handle_packet(data)
-
     def update_s_rank(self, new_s_rank):
         self.s_rank = new_s_rank if new_s_rank > self.s_rank else self.s_rank
 
