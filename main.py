@@ -25,15 +25,16 @@ def cli(ctx, samplerate, ppm, gain, speed):
     ctx.obj['speed'] = speed
 
 @click.command()
-@click.option('--band', '-b', default="900M-Bands")
-@click.option('--rec_time_sec', '-r', default=10)
-@click.option('--analyze' , '-a', is_flag=True)
-@click.option('--detection' , '-d', is_flag=True)
-@click.option('--location' , '-l', type=str, default='')
-@click.option('--lat', type=float)
-@click.option('--lon', type=float)
+@click.option('--band', '-b', default="900M-Bands", help="select the band to scan. One of: E-GSM, P-GSM or R-GSM")
+@click.option('--rec_time_sec', '-r', default=10, help='if the analyze option is specified, sets the recording time for each tower analysis in seocnds')
+@click.option('--analyze' , '-a', is_flag=True, help='turns on anylis of each tower found of the scan. Will produce a capture file of each tower for duration specified with --rec_time_sec')
+@click.option('--detection' , '-d', is_flag=True, help='if the analyze option is specified, turns on IMSI catcher detection during analysis of each tower')
+@click.option('--location' , '-l', type=str, default='', help='current location used to mark a scan in Apple GPS minutes format')
+@click.option('--lat', type=float, help='latitude used to specify the scan location, is used by detectors that perform location based detection of IMSI catchers')
+@click.option('--lon', type=float, help='longitude used to specify the scan location, is used by detectors that perform location based detection of IMSI catchers')
+@click.option('--unmute', '-u', is_flag=True, help='if the analyze option is specified, unmutes the output during analysis which will show the output of your capture device when it starts')
 @click.pass_context
-def scan(ctx, band, rec_time_sec, analyze, detection, location, lat, lon):
+def scan(ctx, band, rec_time_sec, analyze, detection, location, lat, lon, unmute):
     """
     Note: if no location is specified, analysis of found towers is off
     :param detection: determines if druing analysis the packet based detectors are run
@@ -75,7 +76,7 @@ def scan(ctx, band, rec_time_sec, analyze, detection, location, lat, lon):
     #Add scan to database
     #
     runner = Runner(bands=to_scan, sample_rate=args['samplerate'], ppm=args['ppm'], gain=args['gain'], speed=args['speed'], rec_time_sec=rec_time_sec, current_location=location)
-    runner.start(lat, lon, analyze=analyze, detection=detection)
+    runner.start(lat, lon, analyze=analyze, detection=detection, mute=not unmute)
 
 @click.command(help='Prints the saved scans')
 @click.option('--limit', '-n', help='Limit the number of results returned', default=10)
