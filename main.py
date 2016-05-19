@@ -11,6 +11,9 @@ import click
 @click.option('--speed', '-s', type=int, default=4, help="determines the speed of the scanner, .i.e. the speed value is subtracted from the sampling time for each frequency")
 @click.pass_context
 def cli(ctx, samplerate, ppm, gain, speed):
+    """
+    IMSI catcher detector. This program tries to find nearby IMSI catchers using a RTL_SDR device.
+    """
     if speed < 0 or speed > 5:
         print "Invalid scan speed.\n"
         raise click.Abort
@@ -36,6 +39,7 @@ def cli(ctx, samplerate, ppm, gain, speed):
 @click.pass_context
 def scan(ctx, band, rec_time_sec, analyze, detection, location, lat, lon, unmute):
     """
+    Scans for nearby cell towers and analyzes each cell tower and perfroms IMSI catcher detection if both are enabled.
     Note: if no location is specified, analysis of found towers is off
     :param detection: determines if druing analysis the packet based detectors are run
     """
@@ -69,7 +73,12 @@ def scan(ctx, band, rec_time_sec, analyze, detection, location, lat, lon, unmute
     if lat is None or lon is None:
         print "Warning: no valid location specified. Cell tower consistency checks will be disabled in the analysis phase."
 
-
+    if not analyze:
+        print "Analysis of found towers is DISABLED. No online detection methods will be used."
+    else:
+        print "Analysis of found cell towers is ENABLED."
+        if not detection:
+            print "Online detection methods DISABLED."
     print "GSM bands to be scanned:\n"
     print "\t", "\n\t".join(to_scan)
 
