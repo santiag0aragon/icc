@@ -21,7 +21,7 @@ class A5Detector(Detector):
                     self.update_s_rank(Detector.NOT_SUSPICIOUS)
                 else:
                     self.update_s_rank(Detector.UNKNOWN)
-                    # print 'cipher used %s:' % cipher
+                    self.comment = 'cipher used %s:' % cipher
 
 
 
