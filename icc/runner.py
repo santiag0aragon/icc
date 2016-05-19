@@ -115,7 +115,7 @@ class Runner():
             detector_man.addDetector(Detector('test_detector', cellobs_id))
             detector_man.addDetector(A5Detector('a5_detector', cellobs_id))
             detector_man.addDetector(IDRequestDetector('id_request_detector', cellobs_id))
-            detector_man.addDetector(CellReselectionOffsetDetector('c2_request_detector', cellobs_id))
+            detector_man.addDetector(CellReselectionOffsetDetector('cell_reselection_offset_detector', cellobs_id))
             proc = Thread(target=detector_man.start)
             proc.start()
             if mute:
