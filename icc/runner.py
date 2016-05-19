@@ -91,7 +91,7 @@ class Runner():
                 index = click.prompt('Enter the index of the cell tower you want to scan', type=int)
                 rec_time = click.prompt('Enter the scan duration in seconds', type=int)
                 self.rec_time_sec = rec_time
-                self.analyze(co_list[index].id, detection=False)
+                self.analyze(co_list[index].id, detection=detection)
 
     def doCellInfoChecks(self, lat, lon, channel_infos=[]):
         ranks = tic(channel_infos,lat,lon) + neighbours(channel_infos)
@@ -112,10 +112,10 @@ class Runner():
         udp_port = 2333
         if detection:
             detector_man = DetectorManager(udp_port=udp_port)
-            detector_man.addDetector(Detector('test_detector', cellobs_id))
+            #detector_man.addDetector(Detector('test_detector', cellobs_id))
             detector_man.addDetector(A5Detector('a5_detector', cellobs_id))
             detector_man.addDetector(IDRequestDetector('id_request_detector', cellobs_id))
-            detector_man.addDetector(CellReselectionOffsetDetector('c2_request_detector', cellobs_id))
+            detector_man.addDetector(CellReselectionOffsetDetector('cell_reselection_offset_detector', cellobs_id))
             proc = Thread(target=detector_man.start)
             proc.start()
             if mute:
@@ -145,6 +145,8 @@ class Runner():
             print "analyzer stopped"
             s_ranks = detector_man.stop()
             print "detector stopping..."
+
+            proc.join()
 
             #proc.terminate()
             print "detector stopped"
