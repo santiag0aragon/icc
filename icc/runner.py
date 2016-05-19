@@ -112,7 +112,7 @@ class Runner():
         udp_port = 2333
         if detection:
             detector_man = DetectorManager(udp_port=udp_port)
-            detector_man.addDetector(Detector('test_detector', cellobs_id))
+            #detector_man.addDetector(Detector('test_detector', cellobs_id))
             detector_man.addDetector(A5Detector('a5_detector', cellobs_id))
             detector_man.addDetector(IDRequestDetector('id_request_detector', cellobs_id))
             detector_man.addDetector(CellReselectionOffsetDetector('cell_reselection_offset_detector', cellobs_id))
