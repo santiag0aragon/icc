@@ -8,7 +8,7 @@ import click
 @click.option('--ppm', '-p', default=0)
 @click.option('--samplerate', '-sr', default=2e6, type=float)
 @click.option('--gain', '-g', type=float, default=30.0)
-@click.option('--speed', '-s', type=int, default=4)
+@click.option('--speed', '-s', type=int, default=4, help="determines the speed of the scanner, .i.e. the speed value is subtracted from the sampling time for each frequency")
 @click.pass_context
 def cli(ctx, samplerate, ppm, gain, speed):
     if speed < 0 or speed > 5:
