@@ -12,5 +12,7 @@ class CellReselectionOffsetDetector(Detector):
             if sys_info3.selection_parameters_present == 1:
                 if sys_info3.cell_reselection_offset <= cell_reselection_offset_threshold:
                     self.update_s_rank(Detector.UNKNOWN)
+                    self.comment = "medium cell reselection offset detected"
                 elif sys_info3.cell_reselection_offset > cell_reselection_offset_threshold:
                     self.update_s_rank(Detector.SUSPICIOUS)
+                    self.comment = "high cell reselection offset detected"
