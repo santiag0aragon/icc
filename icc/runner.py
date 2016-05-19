@@ -146,6 +146,8 @@ class Runner():
             s_ranks = detector_man.stop()
             print "detector stopping..."
 
+            proc.join()
+
             #proc.terminate()
             print "detector stopped"
             print s_ranks
