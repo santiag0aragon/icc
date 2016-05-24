@@ -34,7 +34,7 @@ from cell_reselection_offset import CellReselectionOffsetDetector
 from cellinfochecks import TowerRank
 
 class Runner():
-    def __init__(self, bands, sample_rate, ppm, gain, speed, rec_time_sec, current_location):
+    def __init__(self, bands, sample_rate, ppm, gain, speed, rec_time_sec, current_location, store_capture):
         self.bands = bands
         self.sample_rate = sample_rate
         self.ppm = ppm
@@ -42,6 +42,7 @@ class Runner():
         self.speed = speed
         self.scan_id = None
         self.rec_time_sec = rec_time_sec
+        self.store_capture = store_capture
 
     def start(self, lat=None, lon=None, analyze=True, detection=True, mute=True):
         db_session = session_class()
@@ -50,14 +51,19 @@ class Runner():
         s_ranks = []
 
         random.shuffle(found)
-        for ch in found:
+        for i, ch in enumerate(found):
             cellobs = CellObservation(freq=ch.freq, lac=ch.lac, mnc=ch.mnc, mcc=ch.mcc, arfcn=ch.arfcn, cid=ch.cid, scan_id=self.scan_id, power=ch.power)
-            db_session.add(cellobs)
-            db_session.commit()
-            ch.cellobservation_id = cellobs.id
+            if (self.store_capture):
+                db_session.add(cellobs)
+                db_session.commit()
+                ch.cellobservation_id = cellobs.id
+            else:
+                ch.cellobservation_id = ch.id = i
             if analyze:
-                s_ranks += self.analyze(cellobs.id, detection=detection, mute=mute)
-        scan_obj = db_session.query(Scan).filter(Scan.id == self.scan_id).one()
+                s_ranks += self.analyze(cellobs, detection=detection, mute=mute)
+
+        if self.store_capture:
+            scan_obj = db_session.query(Scan).filter(Scan.id == self.scan_id).one()
         #Perform offline checks
         if not (lat is None or lon is None):
             print "Performing offline checks..."
@@ -71,15 +77,24 @@ class Runner():
             else:
                 obs_ranks[s.cellobs_id] = [s]
 
-        for cellobs_id, ranks in obs_ranks.iteritems():
-            try:
-                co = db_session.query(CellObservation).filter(CellObservation.id == cellobs_id).one()
-                co.s_rank = sum([x.s_rank for x in ranks])
-                db_session.commit()
-            except (NoResultFound, MultipleResultsFound) as e:
-                print "cell observation not found in database during rank update"
+        if self.store_capture:
+            for cellobs_id, ranks in obs_ranks.iteritems():
+                try:
+                    co = db_session.query(CellObservation).filter(CellObservation.id == cellobs_id).one()
+                    co.s_rank = sum([x.s_rank for x in ranks])
+                    db_session.commit()
+                except (NoResultFound, MultipleResultsFound) as e:
+                    print "cell observation not found in database during rank update"
 
-        co_list = sorted(scan_obj.cell_observations, lambda x,y: x.s_rank - y.s_rank, reverse=True)
+            co_list = sorted(scan_obj.cell_observations, lambda x,y: x.s_rank - y.s_rank, reverse=True)
+        else:
+            cell_observations = dict((v.cellobservation_id, v) for v in found)
+            for cellobs_id, ranks in obs_ranks.iteritems():
+                cell_observations[cellobs_id].s_rank = sum([x.s_rank for x in ranks])
+
+            co_list = sorted(found, lambda x,y: x.s_rank - y.s_rank, reverse=True)
+
+
         #print the cell observation, and ask if a longer scan on one of the towers should be performed
         for index, co in enumerate(co_list):
             print "#{} | Rank: {} | ARFCN: {} | Freq: {} | LAC: {} | MCC: {} | MNC: {} | Power: {}".format(index, co.s_rank, co.arfcn, co.freq, co.lac, co.mcc, co.mnc, co.power)
@@ -91,24 +106,21 @@ class Runner():
                 index = click.prompt('Enter the index of the cell tower you want to scan', type=int)
                 rec_time = click.prompt('Enter the scan duration in seconds', type=int)
                 self.rec_time_sec = rec_time
-                self.analyze(co_list[index].id, detection=detection)
+                self.analyze(co_list[index], detection=detection)
 
     def doCellInfoChecks(self, lat, lon, channel_infos=[]):
         ranks = tic(channel_infos,lat,lon) + neighbours(channel_infos)
         return ranks
 
-    def analyze(self, cellobs_id, detection=True, mute=True):
+    def analyze(self, cell_obs, detection=True, mute=True):
         print "analyzing"
+        cellobs_id = cell_obs.id
         s_ranks = []
-        db_session = session_class()
-        try:
-            cell_obs = db_session.query(CellObservation).filter(CellObservation.id == cellobs_id).one()
-        except (NoResultFound, MultipleResultsFound):
-            print "Could not find celltower observation for cell tower scan in database."
-            return
         cellscan = CellTowerScan(cellobservation_id=cellobs_id, sample_rate=self.sample_rate, rec_time_sec=self.rec_time_sec, timestamp=datetime.datetime.now())
-        db_session.add(cellscan)
-        db_session.commit()
+        if self.store_capture:
+            db_session = session_class()
+            db_session.add(cellscan)
+            db_session.commit()
         udp_port = 2333
         if detection:
             detector_man = DetectorManager(udp_port=udp_port)
@@ -130,7 +142,7 @@ class Runner():
             analyzer = Analyzer(gain=self.gain, samp_rate=self.sample_rate,
                                 ppm=self.ppm, arfcn=cell_obs.arfcn, capture_id=cellscan.getCaptureFileName(),
                                 udp_ports=[udp_port], rec_length=self.rec_time_sec, max_timeslot=2,
-                                verbose=False, test=False)
+                                verbose=False, test=False, store_capture=self.store_capture)
             analyzer.start()
             analyzer.wait()
             analyzer.stop()
@@ -188,11 +200,12 @@ class Runner():
         Returns a list of cell towers
 
         """
-        db_session = session_class()
-        scan_obj = Scan(timestamp=datetime.datetime.now(), bands=','.join(self.bands), latitude=lat, longitude=lon)
-        db_session.add(scan_obj)
-        db_session.commit()
-        self.scan_id = scan_obj.id
+        if self.store_capture:
+            db_session = session_class()
+            scan_obj = Scan(timestamp=datetime.datetime.now(), bands=','.join(self.bands), latitude=lat, longitude=lon)
+            db_session.add(scan_obj)
+            db_session.commit()
+            self.scan_id = scan_obj.id
         return sscan(bands=self.bands, sample_rate=self.sample_rate, ppm=self.ppm, gain=self.gain, speed=self.speed)
 
 def listScans(limit, printscans):
