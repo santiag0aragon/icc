@@ -3,6 +3,8 @@ from icc.runner import listScans as lc
 from icc.aux.lat_log_utils import parse_dms
 import grgsm
 import click
+from icc.file_analyzer import FileAnalyzer
+
 
 @click.group()
 @click.option('--ppm', '-p', default=0, help='frequency offset in parts per million, default 0')
@@ -94,6 +96,18 @@ def listScans(limit, printscans):
     lc(limit, printscans)
 
 @click.command()
+@click.argument('filename', type=str)
+@click.option('--sample_rate', default=2e6)
+@click.option('--arfcn', default=1017)
+@click.option('--timeslot', default=0)
+@click.option('--chan_mode', default='BCCH')
+def analyzeFile(filename, sample_rate, arfcn, timeslot, chan_mode):
+    fa = FileAnalyzer(filename, sample_rate, arfcn, timeslot=timeslot, chan_mode=chan_mode, verbose=True)
+    fa.start()
+    fa.wait()
+    fa.stop()
+
+@click.command()
 def createdb():
     createDatabase()
 
@@ -101,4 +115,5 @@ if __name__ == "__main__":
     cli.add_command(scan)
     cli.add_command(listScans)
     cli.add_command(createdb)
+    cli.add_command(analyzeFile)
     cli(obj={})
