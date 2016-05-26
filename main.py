@@ -57,8 +57,8 @@ def scan(ctx, band, rec_time_sec, analyze, detection, location, lat, lon, unmute
                    #'GSM450',
                    #'GSM480',
                    #'GSM850',  Nothing found
-                   #'DCS1800', #BTS found with kal
-                   #'PCS1900', #Nothing interesting
+                   'DCS1800', #BTS found with kal
+                   'PCS1900', #Nothing interesting
                     ]
     else:
         to_scan = [band]

@@ -91,8 +91,23 @@ class Runner():
                 index = click.prompt('Enter the index of the cell tower you want to scan', type=int)
                 rec_time = click.prompt('Enter the scan duration in seconds', type=int)
                 self.rec_time_sec = rec_time
-                self.analyze(co_list[index].id, detection=detection)
+                s_ranks = self.analyze(co_list[index].id, detection=detection)
+################# PRINTING RANK
+                obs_ranks = {}
+                for s in s_ranks:
+                    if s.cellobs_id in obs_ranks:
+                        obs_ranks[s.cellobs_id].append(s)
+                    else:
+                        obs_ranks[s.cellobs_id] = [s]
 
+                co_list = sorted(scan_obj.cell_observations, lambda x,y: x.s_rank - y.s_rank, reverse=True)
+                #print the cell observation, and ask if a longer scan on one of the towers should be performed
+                for index, co in enumerate(co_list):
+                    print "#{} | Rank: {} | ARFCN: {} | Freq: {} | LAC: {} | MCC: {} | MNC: {} | Power: {}".format(index, co.s_rank, co.arfcn, co.freq, co.lac, co.mcc, co.mnc, co.power)
+                    if co.id in obs_ranks:
+                        for tr in obs_ranks[co.id]:
+                            print "--- Detector: {} | Rank: {} | Comment: {}".format(tr.detector, tr.s_rank, tr.comment)
+#################
     def doCellInfoChecks(self, lat, lon, channel_infos=[]):
         ranks = tic(channel_infos,lat,lon) + neighbours(channel_infos)
         return ranks
@@ -150,7 +165,7 @@ class Runner():
 
             #proc.terminate()
             print "detector stopped"
-            print s_ranks
+            # print s_ranks
             # for r in rankings:
             #     total_rank += r['s_rank']
             # cell_obs.s_rank = total_rank
