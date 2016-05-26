@@ -16,6 +16,7 @@ class Detector:
         self.name = name
         self.comment = ""
         self.cellobs_id = cellobs_id
+        self.counter = 0
 
     def update_s_rank(self, new_s_rank):
         self.s_rank = new_s_rank if new_s_rank > self.s_rank else self.s_rank
