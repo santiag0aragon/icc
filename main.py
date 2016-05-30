@@ -96,8 +96,8 @@ def listScans(limit, printscans):
     lc(limit, printscans)
 
 @click.command()
-@click.option('--timeslot', default=0, type=int)
-@click.option('--chan_mode', default='BCCH')
+@click.option('--timeslot', default=0, type=int, help="Decode timeslot 0 - [timeslot]")
+@click.option('--chan_mode', default='SDCCH8', help="Channel mode to demap the timeslots other than t0")
 def detectOffline(chan_mode, timeslot):
     offlineDetection(chan_mode, timeslot)
 
@@ -106,10 +106,11 @@ def detectOffline(chan_mode, timeslot):
 @click.argument('filename', type=str)
 @click.option('--sample_rate', default=2e6)
 @click.option('--arfcn', default=1017)
-@click.option('--timeslot', default=0)
-@click.option('--chan_mode', default='BCCH')
+@click.option('--timeslot', default=0, help="Decode timeslot 0 - [timeslot]")
+@click.option('--chan_mode', default='SDCCH8', help="Channel mode to demap the timeslots other than t0")
 def analyzeFile(filename, sample_rate, arfcn, timeslot, chan_mode):
-    fa = FileAnalyzer(filename, sample_rate, arfcn, timeslot=timeslot, chan_mode=chan_mode, udp_port=udp_port, verbose=True)
+    udp_port = 4729
+    fa = FileAnalyzer(filename, sample_rate, arfcn, timeslot=timeslot, chan_mode=chan_mode, udp_port=udp_port, verbose=True, connectToSelf=True)
     fa.start()
     fa.wait()
     fa.stop()
