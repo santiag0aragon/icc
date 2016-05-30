@@ -16,7 +16,7 @@ class CellTowerScan(Base):
     rec_time_sec = NotNullColumn(Integer)
     timestamp = NotNullColumn(DateTime(True))
     cellobservation_id = NotNullColumn(UUID(), ForeignKey('cellobservations.id'))
-    relationship("CellObservation")
+    cell_observation = relationship("CellObservation")
 
     def getCaptureFileName(self):
         return "celltowerscan_{}-cellobservation_{}-samplerate_{}-timestamp_{}".format(self.id, self.cellobservation_id,
