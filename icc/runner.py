@@ -32,6 +32,7 @@ from a5_detector import A5Detector
 from id_request_detector import IDRequestDetector
 from cell_reselection_offset import CellReselectionOffsetDetector
 from cellinfochecks import TowerRank
+from icc.file_analyzer import FileAnalyzer
 
 class Runner():
     def __init__(self, bands, sample_rate, ppm, gain, speed, rec_time_sec, current_location):
@@ -209,6 +210,79 @@ class Runner():
         db_session.commit()
         self.scan_id = scan_obj.id
         return sscan(bands=self.bands, sample_rate=self.sample_rate, ppm=self.ppm, gain=self.gain, speed=self.speed)
+
+def offlineDetection(chan_mode, timeslot):
+    db_session = session_class()
+    scans = db_session.query(Scan).all()
+
+    while click.confirm('Press y to continue...'):
+        for index, scan in enumerate(scans):
+            print "#{} | ID: {} | Timestamp: {} | Latitude: {} | Longitude: {}".format(index, scan.id, scan.timestamp.isoformat(), scan.latitude, scan.longitude)
+        index = click.prompt('Enter the index of the scan', type=int)
+        if not (index >= 0 and index < len(scans)):
+            print "Invalid index specified..."
+            continue
+        current_scan = scans[index]
+        co_list = sorted(current_scan.cell_observations, lambda x,y: x.s_rank - y.s_rank, reverse=True)
+        #print the cell observation, and ask if a longer scan on one of the towers should be performed
+        printed_scans = 0
+        for i, co in enumerate(co_list):
+            if len(co.celltowerscans) > 0:
+                print "#{} | Rank: {} | ARFCN: {} | Freq: {} | LAC: {} | MCC: {} | MNC: {} | Power: {}".format(i, co.s_rank, co.arfcn, co.freq, co.lac, co.mcc, co.mnc, co.power)
+                for i, cts in enumerate(co.celltowerscans):
+                    print "--- #{} | ID: {} | Timestamp: {}".format(i, cts.id, cts.timestamp.isoformat())
+                    printed_scans += 1
+        if printed_scans == 0:
+            print("The selected scan does not have any stored capture files in the database. Try another scan.")
+            continue
+        index2 = click.prompt('Enter the index of the cell tower observation', type=int)
+        if not(index2 >= 0 and index2 < len(co_list)):
+            print "Invalid cell tower observation index specified."
+            continue
+        selected_obs = co_list[index2]
+        index3 = click.prompt('Enter the index of the cell tower scan', type=int)
+        if not (index3 >= 0 and index3 < len(selected_obs.celltowerscans)):
+            print "Invalid tower scan index specified."
+            continue
+        selected_cts = selected_obs.celltowerscans[index3]
+
+
+        udp_port = 2333
+        detector_man = DetectorManager(udp_port=udp_port)
+        #detector_man.addDetector(Detector('test_detector', cellobs_id))
+        detector_man.addDetector(A5Detector('a5_detector', selected_obs.id))
+        detector_man.addDetector(IDRequestDetector('id_request_detector', selected_obs.id))
+        detector_man.addDetector(CellReselectionOffsetDetector('cell_reselection_offset_detector', selected_obs.id))
+        proc = Thread(target=detector_man.start)
+        proc.start()
+
+        print "Selected file: {}".format(selected_cts.getCaptureFileName())
+        fa = FileAnalyzer(selected_cts.getCaptureFileName() +".cfile", cts.sample_rate, cts.cell_observation.arfcn, timeslot=timeslot, chan_mode=chan_mode, udp_port=udp_port, verbose=True)
+        fa.start()
+        fa.wait()
+        fa.stop()
+        print "analyzer stopped"
+        s_ranks = detector_man.stop()
+        print "detector stopping..."
+
+        proc.join()
+
+        #proc.terminate()
+        print "detector stopped"
+
+        #print s_ranks
+        obs_ranks = {}
+        for s in s_ranks:
+            if s.cellobs_id in obs_ranks:
+                obs_ranks[s.cellobs_id].append(s)
+            else:
+                obs_ranks[s.cellobs_id] = [s]
+        print "#{} | Rank: {} | ARFCN: {} | Freq: {} | LAC: {} | MCC: {} | MNC: {} | Power: {}".format(i, selected_obs.s_rank,
+                                                                                                        selected_obs.arfcn, selected_obs.freq, selected_obs.lac,
+                                                                                                        selected_obs.mcc, selected_obs.mnc, selected_obs.power)
+        for tr in obs_ranks[selected_obs.id]:
+            print "--- Detector: {} | Rank: {} | Comment: {}".format(tr.detector, tr.s_rank, tr.comment)
+
 
 def listScans(limit, printscans):
     db_session = session_class()

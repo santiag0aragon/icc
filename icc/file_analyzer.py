@@ -19,7 +19,7 @@ Block that reads a capture file.
 
 class FileAnalyzer(gr.top_block):
 
-    def __init__(self, filename, samp_rate, arfcn, chan_mode='BCCH', udp_ports=[], timeslot=0, verbose=True, args=""):
+    def __init__(self, filename, samp_rate, arfcn, chan_mode='BCCH', udp_port=4000, timeslot=0, verbose=True, args="", connectToSelf=False):
         """
         """
 
@@ -37,7 +37,7 @@ class FileAnalyzer(gr.top_block):
 
         self.samp_rate = samp_rate
         self.arfcn = arfcn
-        self.udp_ports = udp_ports
+        self.udp_port = udp_port
         self.verbose = verbose
         self.cfile = filename.encode('utf-8')
         self.timeslot = timeslot
@@ -79,9 +79,10 @@ class FileAnalyzer(gr.top_block):
         self.cch_decoder = grgsm.control_channels_decoder()
 
         #Server socket
-        self.serversocket = blocks.socket_pdu("UDP_SERVER", "127.0.0.1", "4729", 10000)
+        if connectToSelf:
+            self.serversocket = blocks.socket_pdu("UDP_SERVER", "127.0.0.1", str(self.udp_port), 10000)
 
-        self.socket_pdu = blocks.socket_pdu("UDP_CLIENT", "127.0.0.1", "4729", 10000)
+        self.socket_pdu = blocks.socket_pdu("UDP_CLIENT", "127.0.0.1", str(self.udp_port), 10000)
         if self.verbose:
             self.message_printer = grgsm.message_printer(pmt.intern(""), True, True, False)
 
@@ -135,7 +136,7 @@ def cli():
 @click.option('--arfcn', default=1017)
 @click.option('--timeslot', default=0)
 def run(filename, sample_rate, arfcn, timeslot):
-    fa = FileAnalyzer(filename, sample_rate, arfcn, timeslot=timeslot, verbose=True)
+    fa = FileAnalyzer(filename, sample_rate, arfcn, timeslot=timeslot, verbose=True, connectToSelf=True)
     fa.start()
     fa.wait()
     fa.stop()
