@@ -21,9 +21,37 @@ class GSMTap(Packet):
             return BCCHCommon
         elif self.channel_type == 2:
             return CCCHCommon
+        elif self.channel_type == 8:
+            return LAPDm
         else:
             return Raw
 
+
+class LAPDm(Packet):
+    name = "LAPDm"
+    fields_desc = [XByteField("address_field", 0),
+                   XByteField("control_field", 0),
+                   XByteField("len_field", 0)]
+
+    def guess_payload_class(self, payload):
+        if self.control_field == 32:
+            return GSMAIFDTAP
+        else:
+            return Raw
+
+
+class GSMAIFDTAP(Packet):
+    name = "GSMAIFDTAP"
+    fields_desc = [XByteField("rrmm", 0),
+                   XByteField("message_type", 0)]
+
+    def guess_payload_class(self, payload):
+        if self.message_type == 53:
+            return CipherModeCommand
+        elif self.message_type == 24:
+            return IdentityRequest
+        else:
+            return Raw
 
 class BCCHCommon(Packet):
     name = "BCCHCommon"
@@ -50,6 +78,16 @@ class SystemInfoType3(Packet):
                    XBitField("cbq", 0, 1),
                    XBitField("cell_reselection_offset", 0, 6)]
     # rest of packet is left out]
+
+
+class CipherModeCommand(Packet):
+    name = "CipherModeCommand"
+    fields_desc = [XByteField("cipher_mode", 0)]
+
+
+class IdentityRequest(Packet):
+    name = "IdentityRequest"
+    fields_desc = [XByteField("id_type", 0)]
 
 
 class CCCHCommon(Packet):

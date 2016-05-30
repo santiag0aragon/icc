@@ -1,31 +1,33 @@
-import socket
 from scapy.all import *
-from gsmpackets import *
+from icc.gsmpackets import *
 from multiprocessing import Process
+from icc.aux import TowerRank
+
 
 class Detector:
 
-    def __init__(self):
+    SUSPICIOUS = 2
+    UNKNOWN = 1
+    NOT_SUSPICIOUS = 0
+
+    def __init__(self, name, cellobs_id):
         """
         Parameters:
         """
+        self.s_rank = 0
+        self.name = name
+        self.comment = ""
+        self.cellobs_id = cellobs_id
+        self.counter = 0
 
-    def listen(self):
-
-        UDP_IP = "127.0.0.1"
-        self.sock = socket.socket(socket.AF_INET, # Internet
-        socket.SOCK_DGRAM) # UDP
-        self.sock.bind((UDP_IP, self.udp_port))
-
-        while True:
-            data, addr = self.sock.recvfrom(1024) # buffer size is 1024 bytes
-            self.handle_packet(data)
+    def update_s_rank(self, new_s_rank):
+        self.s_rank = new_s_rank if new_s_rank > self.s_rank else self.s_rank
 
     def handle_packet(self, data):
         print ':'.join(x.encode('hex') for x in data)
 
     def on_finish(self):
-        return {"s_rank" : 0, "detector_name"  : "default_detector"}
+        return TowerRank(self.s_rank, self.name, self.comment, self.cellobs_id)
 
     def start(self):
         self.process = Process(target=self.listen)
