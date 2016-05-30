@@ -110,7 +110,7 @@ class Runner():
                             print "--- Detector: {} | Rank: {} | Comment: {}".format(tr.detector, tr.s_rank, tr.comment)
 #################
     def doCellInfoChecks(self, lat, lon, channel_infos=[]):
-        ranks = tic(channel_infos,lat,lon) + neighbours(channel_infos)
+        ranks = tic(channel_infos,lat,lon) + lac(channel_infos) + neighbours(channel_infos)
         return ranks
 
     def analyze(self, cellobs_id, detection=True, mute=True):
