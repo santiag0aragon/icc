@@ -1,6 +1,7 @@
 from scapy.all import *
-from gsmpackets import *
+from icc.gsmpackets import *
 from detector import Detector
+
 
 class IDRequestDetector(Detector):
 

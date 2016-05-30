@@ -1,5 +1,5 @@
 from detector import Detector
-from gsmpackets import GSMTap
+from icc.gsmpackets import GSMTap
 
 cell_reselection_offset_lower_threshold = 0  # db
 cell_reselection_offset_upper_threshold = 25  # db
