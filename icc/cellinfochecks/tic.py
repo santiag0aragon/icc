@@ -27,6 +27,7 @@ def tic(found_list, current_lat=52.2311057, current_lon=6.8553815, range_multipl
     if len(found_list) > 0:
         print("Printing cell tower info and checking database....")
         for info in sorted(found_list):
+            ## checking database information
             rank = 0
             comment = ""
             #print info
@@ -46,6 +47,7 @@ def tic(found_list, current_lat=52.2311057, current_lon=6.8553815, range_multipl
                 print("No match found in database")
                 comment =" No match found in database"
                 rank = 1
+
             ranks.append(TowerRank(rank, "tic", comment, info.cellobservation_id))
     else:
         print("No cell towers found...")
