@@ -1,6 +1,8 @@
 from icc.aux import TowerRank
 from collections import Counter
 
+lac_threshold = .25 # % of most common LAC
+
 def lac(found_list):
     ranks = []
     for info in sorted(found_list):
@@ -13,8 +15,8 @@ def lac(found_list):
             if info.mcc == tower.mcc and info.mnc == info.mnc:
                 lacodes.append(tower.lac)
 
-        areacounter = dict(Counter(lacodes))
-        if len(areacounter) > 1 and sorted(areacounter, key=areacounter.get)[0] == info.lac:
+        areacounter = Counter(lacodes)
+        if (areacounter.most_common(1)[0][1] * lac_threshold) > areacounter[info.lac]:
             comment = "Uncommon local area code"
             rank = 1
 
