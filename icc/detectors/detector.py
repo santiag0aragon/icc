@@ -1,8 +1,7 @@
-import socket
 from scapy.all import *
-from gsmpackets import *
+from icc.gsmpackets import *
 from multiprocessing import Process
-from aux import TowerRank
+from icc.aux import TowerRank
 
 class Detector:
     SUSPICIOUS = 2

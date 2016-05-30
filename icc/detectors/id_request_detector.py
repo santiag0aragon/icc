@@ -1,8 +1,7 @@
-import socket
 from scapy.all import *
-from gsmpackets import *
-from multiprocessing import Process
+from icc.gsmpackets import *
 from detector import Detector
+
 
 class IDRequestDetector(Detector):
 
