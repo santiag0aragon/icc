@@ -3,10 +3,13 @@ from icc.gsmpackets import *
 from multiprocessing import Process
 from icc.aux import TowerRank
 
+
 class Detector:
+
     SUSPICIOUS = 2
     UNKNOWN = 1
     NOT_SUSPICIOUS = 0
+
     def __init__(self, name, cellobs_id):
         """
         Parameters:
