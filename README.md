@@ -10,11 +10,16 @@ The project depends on the following python libraries:
 ```main.py [OPTIONS] COMMAND [ARGS]```
 
 ###OPTIONS
-⋅⋅⋅-p, --ppm INTEGER        frequency offset in parts per million, default 0
-⋅⋅⋅-sr, --samplerate FLOAT  samplerate in Hz
-⋅⋅⋅-g, --gain FLOAT
-⋅⋅⋅-s, --speed INTEGER      determines the speed of the scanner, .i.e. the speed value is subtracted from the sampling time for each frequency
-⋅⋅⋅--help                   Show this message and exit.
+  -p, --ppm INTEGER        frequency offset in parts per million, default 0
+  
+  -sr, --samplerate FLOAT  samplerate in Hz
+  
+  -g, --gain FLOAT
+  
+  -s, --speed INTEGER      determines the speed of the scanner, .i.e. the speed value is subtracted from the sampling time for each frequency
+  
+  --help                   Show this message and exit.
+  
 ###COMMANDS
   analyzefile
   createdb
