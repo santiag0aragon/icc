@@ -1,4 +1,4 @@
-from detector import Detector
+from detectors.detector import Detector
 import socket
 
 class DetectorManager():

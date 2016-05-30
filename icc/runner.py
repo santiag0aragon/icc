@@ -27,10 +27,10 @@ from detector_manager import DetectorManager
 from scanner import scan as sscan
 from cellinfochecks import *
 from aux.lat_log_utils import parse_dms
-from detector import Detector
-from a5_detector import A5Detector
-from id_request_detector import IDRequestDetector
-from cell_reselection_offset import CellReselectionOffsetDetector
+from detectors.detector import Detector
+from detectors.a5_detector import A5Detector
+from detectors.id_request_detector import IDRequestDetector
+from detectors.cell_reselection_offset import CellReselectionOffsetDetector
 from cellinfochecks import TowerRank
 
 class Runner():
