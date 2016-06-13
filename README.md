@@ -122,7 +122,7 @@ Used to examine every packet forwarded by the analyzer.
 + A5/2 Weakened algorithm to fulfill exportation regulation
 + A5/3 Updated algorithm for 3G
 
-#### Cell reselection offset. C2_OFFSET
+#### Cell reselection parameters. C2_OFFSET and C2_HYSTERESIS
 
 #### Identity request detector.
 
