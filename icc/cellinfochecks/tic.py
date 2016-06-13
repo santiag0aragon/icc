@@ -33,7 +33,7 @@ def tic(found_list, current_lat=52.2311057, current_lon=6.8553815, range_multipl
             #print info
             if verbose:
                 print info.get_verbose_info()
-            towers = CellTower.queryTower(info.mcc, info.mnc, info.cid)
+            towers = CellTower.queryTower(info.mcc, info.mnc, info.lac, info.cid)
             if len(towers) > 0:
                 tower = towers[0]
                 distance = calc_distance(tower.lat, tower.lon, current_lat, current_lon)
