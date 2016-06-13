@@ -87,13 +87,14 @@ class Analyzer(gr.top_block):
         self.gsm_clock_offset_control = grgsm.clock_offset_control(self.fc-shiftoff)
 
         #Control channel demapper for timeslot 0
-        self.gsm_bcch_ccch_demapper_0 = grgsm.universal_ctrl_chans_demapper(0, ([2,6,12,16,22,26,32,36,42,46]), ([1,2,2,2,2,2,2,2,2,2]))
+        #self.gsm_bcch_ccch_demapper_0 = grgsm.universal_ctrl_chans_demapper(0, ([2,6,12,16,22,26,32,36,42,46]), ([1,2,2,2,2,2,2,2,2,2]))
+        self.gsm_bcch_ccch_demapper_0 = grgsm.gsm_bcch_ccch_demapper(0)
         #For all other timeslots are assumed to contain sdcch8 logical channels, this demapping may be incorrect
         if max_timeslot >= 1 and max_timeslot <= 8:
             self.gsm_sdcch8_demappers = []
             for i in range(1,max_timeslot + 1):
-                self.gsm_sdcch8_demappers.append(grgsm.universal_ctrl_chans_demapper(i, ([0,4,8,12,16,20,24,28,32,36,40,44]), ([8,8,8,8,8,8,8,8,136,136,136,136])))
-
+                #self.gsm_sdcch8_demappers.append(grgsm.universal_ctrl_chans_demapper(i, ([0,4,8,12,16,20,24,28,32,36,40,44]), ([8,8,8,8,8,8,8,8,136,136,136,136])))
+                self.gsm_sdcch8_demappers.append(grgsm.gsm_sdcch8_demapper(i))
         #Control channel decoder (extracts the packets), one for each timeslot
         self.gsm_control_channels_decoders = []
         for i in range(0,max_timeslot + 1):
