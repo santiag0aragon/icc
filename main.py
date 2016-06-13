@@ -38,8 +38,9 @@ def cli(ctx, samplerate, ppm, gain, speed):
 @click.option('--lat', type=float, help='latitude used to specify the scan location, is used by detectors that perform location based detection of IMSI catchers')
 @click.option('--lon', type=float, help='longitude used to specify the scan location, is used by detectors that perform location based detection of IMSI catchers')
 @click.option('--unmute', '-u', is_flag=True, help='if the analyze option is specified, unmutes the output during analysis which will show the output of your capture device when it starts')
+@click.option('--no_store', '-S', is_flag=True, help='Do not store scan data')
 @click.pass_context
-def scan(ctx, band, rec_time_sec, analyze, detection, location, lat, lon, unmute):
+def scan(ctx, band, rec_time_sec, analyze, detection, location, lat, lon, unmute, no_store):
     """
     Scans for nearby cell towers and analyzes each cell tower and perfroms IMSI catcher detection if both are enabled.
     Note: if no location is specified, analysis of found towers is off
@@ -86,7 +87,7 @@ def scan(ctx, band, rec_time_sec, analyze, detection, location, lat, lon, unmute
 
     #Add scan to database
     #
-    runner = Runner(bands=to_scan, sample_rate=args['samplerate'], ppm=args['ppm'], gain=args['gain'], speed=args['speed'], rec_time_sec=rec_time_sec, current_location=location)
+    runner = Runner(bands=to_scan, sample_rate=args['samplerate'], ppm=args['ppm'], gain=args['gain'], speed=args['speed'], rec_time_sec=rec_time_sec, current_location=location, store_capture=not no_store)
     runner.start(lat, lon, analyze=analyze, detection=detection, mute=not unmute)
 
 @click.command(help='Prints the saved scans')

@@ -4,3 +4,6 @@ class TowerRank:
         self.detector = detector
         self.comment = comment
         self.cellobs_id = cellobs_id
+
+    def __repr__(self):
+        return self.detector + ": " + self.comment + "(" + str(self.s_rank) + ")"
