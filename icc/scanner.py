@@ -113,6 +113,7 @@ class receiver_with_decoder(grgsm.hier_block):
     def set_fc(self, fc):
         self.fc = fc
         self.gsm_input_0.set_fc(self.fc)
+        self.gsm_clock_offset_control_0.set_fc(self.fc)
 
     def get_ppm(self):
         return self.ppm
@@ -194,7 +195,8 @@ class wideband_receiver(grgsm.hier_block):
 
     def set_fc(self, fc):
         self.fc = fc
-        self.create_receivers()
+        for chan in xrange(0,self.channels_num):
+            self.receivers_with_decoders[chan].set_fc(fc)
 
     def get_samp_rate(self):
         return self.samp_rate
@@ -249,13 +251,20 @@ class wideband_scanner(gr.top_block):
     def set_carrier_frequency(self, carrier_frequency):
         self.carrier_frequency = carrier_frequency
         self.rtlsdr_source.set_center_freq(carrier_frequency - 0.1e6, 0)
+        self.wideband_receiver.set_fc(carrier_frequency)
 
 def scan(bands=[], sample_rate=2e6, ppm=0, gain=30.0, speed=4):
 
     found_list = []
     channels_num = int(sample_rate/0.2e6)
     arfcn_list = dict()
+
+    scanner = wideband_scanner(rec_len=6-speed,
+            sample_rate=sample_rate,
+            ppm=ppm)
+
     for band in bands:
+        start = time.time()
         print "\nScanning band: %s"% band
 
         first_arfcn = grgsm.arfcn.get_first_arfcn(band)
@@ -267,33 +276,13 @@ def scan(bands=[], sample_rate=2e6, ppm=0, gain=30.0, speed=4):
         stop_freq = last_freq + 0.2e6 * channels_num
 
         while current_freq < stop_freq:
-
-            # silence rtl_sdr output:
-            # open 2 fds
-            null_fds = [os.open(os.devnull, os.O_RDWR) for x in xrange(2)]
-            # save the current file descriptors to a tuple
-            save = os.dup(1), os.dup(2)
-            # put /dev/null fds on 1 and 2
-            os.dup2(null_fds[0], 1)
-            os.dup2(null_fds[1], 2)
-
             # instantiate scanner and processor
-            scanner = wideband_scanner(rec_len=6-speed,
-                                sample_rate=sample_rate,
-                                carrier_frequency=current_freq,
-                                ppm=ppm)
+            scanner.set_carrier_frequency(current_freq)
 
             # start recording
             scanner.start()
             scanner.wait()
             scanner.stop()
-
-            # restore file descriptors so we can print the results
-            os.dup2(save[0], 1)
-            os.dup2(save[1], 2)
-            # close the temporary fds
-            os.close(null_fds[0])
-            os.close(null_fds[1])
 
             freq_offsets = numpy.fft.ifftshift(numpy.array(range(int(-numpy.floor(channels_num/2)),int(numpy.floor((channels_num+1)/2))))*2e5)
             detected_c0_channels = scanner.gsm_extract_system_info.get_chans()
@@ -316,11 +305,17 @@ def scan(bands=[], sample_rate=2e6, ppm=0, gain=30.0, speed=4):
 
                     info = ChannelInfo(grgsm.arfcn.downlink2arfcn(found_freqs[i], band), found_freqs[i], cell_ids[i], lacs[i], mccs[i], mncs[i], ccch_confs[i], powers[i], neighbour_list, cell_arfcn_list)
 
-                    found_list.append(info)
-                    print info.arfcn
+                    if info.arfcn:
+                        found_list.append(info)
+                        print info.arfcn
+                    else:
+                        print 'Skipping `None`...'
 
-            scanner = None
+            # Remove old retrieved data
+            scanner.head.reset()
+            scanner.gsm_extract_system_info.reset()
             current_freq += channels_num * 0.2e6
+
     return found_list
 
 if __name__ == '__main__':

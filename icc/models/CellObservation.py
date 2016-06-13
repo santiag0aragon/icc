@@ -1,7 +1,7 @@
 from sqlalchemy import *
 from sqlalchemy.orm import relationship
 from functools import partial
-from database import Base
+from icc.database import Base
 
 from UUID import id_column, UUID
 

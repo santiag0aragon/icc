@@ -228,11 +228,11 @@ class Analyzer(gr.top_block):
 
 
 if __name__ == '__main__':
-
+    udp_port = 2333
     arfcn = 0
-    fc = 933.6e6 #Spiegel cell tower
+    fc = 938.4e6 #Spiegel cell tower
     sample_rate = 2000000.052982
-    ppm = 90 #frequency offset in ppm
+    ppm = 0 #frequency offset in ppm
     gain = 30
 
 
@@ -243,10 +243,20 @@ if __name__ == '__main__':
             break
 
     print("ARFCN: " + str(arfcn))
-
+    from multiprocessing import Process
+    from threading import Thread
+    from detector_manager import DetectorManager
+    from a5_detector import A5Detector
+    detector_man = DetectorManager(udp_port=udp_port)
+    detector_man.addDetector(A5Detector('a5_detector', 10))
+    proc = Thread(target=detector_man.start)
+    proc.start()
     analyzer = Analyzer(gain=gain, samp_rate=sample_rate,
                         ppm=ppm, arfcn=arfcn, capture_id="test0",
-                        udp_ports=[4729], rec_length=30, max_timeslot=2,
-                        verbose=True, test=True)
+                        udp_ports=[udp_port], rec_length=60, max_timeslot=2,
+                        verbose=False, test=False)
     analyzer.start()
     analyzer.wait()
+    analyzer.stop()
+    print detector_man.stop()
+    proc.join()
