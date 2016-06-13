@@ -7,7 +7,7 @@ def lac(found_list):
     ranks = []
     for info in sorted(found_list):
         rank = 0
-        comment = None
+        comment = "Common local area code"
 
         ## checking local area code consistency
         lacodes = []
