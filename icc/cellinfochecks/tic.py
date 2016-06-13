@@ -38,10 +38,12 @@ def tic(found_list, current_lat=52.2311057, current_lon=6.8553815, range_multipl
                 tower = towers[0]
                 distance = calc_distance(tower.lat, tower.lon, current_lat, current_lon)
                 if distance > (tower.range * range_multiplier):
-                    comment = "Cell tower found in database, but in wrong location %d m (range %d m)"%(distance, tower.range)
+                    comment = "Cell tower found in database, but in wrong location %d m (range %d m)" % (distance, tower.range)
                     rank = 1
+                else:
+                    comment = "Cell tower found in database and is in range"
             else:
-                comment =" No match found in database"
+                comment = "No match found in database"
                 rank = 1
 
             ranks.append(TowerRank(rank, "tic", comment, info.cellobservation_id))
