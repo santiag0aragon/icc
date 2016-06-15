@@ -1,0 +1,203 @@
+%%
+%% Copyright 2007, 2008, 2009 Elsevier Ltd
+%%
+%% This file is part of the 'Elsarticle Bundle'.
+%% ---------------------------------------------
+%%
+%% It may be distributed under the conditions of the LaTeX Project Public
+%% License, either version 1.2 of this license or (at your option) any
+%% later version.  The latest version of this license is in
+%%    http://www.latex-project.org/lppl.txt
+%% and version 1.2 or later is part of all distributions of LaTeX
+%% version 1999/12/01 or later.
+%%
+%% The list of all files belonging to the 'Elsarticle Bundle' is
+%% given in the file `manifest.txt'.
+%%
+
+%% Template article for Elsevier's document class `elsarticle'
+%% with numbered style bibliographic references
+%% SP 2008/03/01
+%%
+%%
+%%
+%% $Id: elsarticle-template-num.tex 4 2009-10-24 08:22:58Z rishi $
+%%
+%%
+\documentclass[preprint,12pt,3p]{elsarticle}
+
+%\documentclass[final,3p,times]{elsarticle}
+%% Use the option review to obtain double line spacing
+%% \documentclass[preprint,review,12pt]{elsarticle}
+
+%% Use the options 1p,twocolumn; 3p; 3p,twocolumn; 5p; or 5p,twocolumn
+%% for a journal layout:
+%% \documentclass[final,1p,times]{elsarticle}
+%% \documentclass[final,1p,times,twocolumn]{elsarticle}
+%% \documentclass[final,3p,times]{elsarticle}
+%% \documentclass[final,3p,times,twocolumn]{elsarticle}
+%% \documentclass[final,5p,times]{elsarticle}
+%% \documentclass[final,5p,times,twocolumn]{elsarticle}
+
+%% if you use PostScript figures in your article
+%% use the graphics package for simple commands
+%% \usepackage{graphics}
+%% or use the graphicx package for more complicated commands
+%% \usepackage{graphicx}
+%% or use the epsfig package if you prefer to use the old commands
+%% \usepackage{epsfig}
+
+%% The amssymb package provides various useful mathematical symbols
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{mathtools}
+\usepackage[utf8]{inputenc}
+\usepackage{color}
+\usepackage[procnames]{listings}
+\usepackage[]{algorithm2e}
+
+
+\graphicspath{ {img/} }
+%% The amsthm package provides extended theorem environments
+%% \usepackage{amsthm}
+
+%% The lineno packages adds line numbers. Start line numbering with
+%% \begin{linenumbers}, end it with \end{linenumbers}. Or switch it on
+%% for the whole article with \linenumbers after \end{frontmatter}.
+%% \usepackage{lineno}
+
+%% natbib.sty is loaded by default. However, natbib options can be
+%% provided with \biboptions{...} command. Following options are
+%% valid:
+
+%%   round  -  round parentheses are used (default)
+%%   square -  square brackets are used   [option]
+%%   curly  -  curly braces are used      {option}
+%%   angle  -  angle brackets are used    <option>
+%%   semicolon  -  multiple citations separated by semi-colon
+%%   colon  - same as semicolon, an earlier confusion
+%%   comma  -  separated by comma
+%%   numbers-  selects numerical citations
+%%   super  -  numerical citations as superscripts
+%%   sort   -  sorts multiple citations according to order in ref. list
+%%   sort&compress   -  like sort, but also compresses numerical citations
+%%   compress - compresses without sorting
+%%
+%% \biboptions{comma,round}
+
+% \biboptions{}
+
+
+\begin{document}
+
+\begin{frontmatter}
+
+\title{icc: iMSI catcher catcher}
+
+\author{Jan Kuipers}
+\address{j.h.kuipers@student.utwente.nl}
+\address{University of Twente}
+\author{David Stritzl}
+\address{david.stritzl@gmail.com}
+\address{University of Twente}
+\author{Santiago Aragón}
+\address{s.e.aragonramirez@student.utwente.nl}
+\address{University of Twente}
+\author{Iwan Timmer}
+\address{i.r.timmer@student.utwente.nl}
+\address{University of Twente}
+\begin{abstract}
+This program tries to find nearby IMSI catchers using a RTL\_SDR device. TODO: Diagram
+\end{abstract}
+
+
+\end{frontmatter}
+
+%%
+%% Start line numbering here if you want
+%%
+% \linenumbers2
+
+%% main text
+
+
+
+\section{Motivation and Outline}
+What is an IMSI Catcher
+Why to spoit it
+Possible approaches and difficculties
+Our approach
+Outline
+\section{Design}
+
+\subsection{Detection methods}
+
+Detections methods (DM) are defined as python scripts in detectors/some\_dector.py. Every method should extend the class Detector specified in detectors/Detector.py and define its own callback function, e.g.:
+\lstset{language=Python}
+\begin{lstlisting}
+    def handle_packet(self, data):
+        p = GSMTap(data)
+
+        if p.payload.name is 'LAPDm' and
+           p.payload.payload.name is 'GSMAIFDTAP' and
+           p.payload.payload.payload.name is 'CipherModeCommand':
+                cipher = p.payload.payload.payload.cipher_mode >> 1
+
+                if cipher == 0:
+                    self.update_s_rank(Detector.SUSPICIOUS)
+                    self.comment = 'A5/1 detected'
+                ...
+
+\end{lstlisting}
+
+This function will be applied packet wise and should rank the anylyzed BTS and at the end modify the \texttt{s\_rank} and \texttt{comment} variables calling \texttt{self.update\_s\_rank(RANK)}(resp. \texttt{self.comment='A descriptive comment'}).
+
+We define rank the suspiciones of a BTS as
+\begin{lstlisting}
+
+    SUSPICIOUS = 2
+    UNKNOWN = 1
+    NOT_SUSPICIOUS = 0
+\end{lstlisting}
+
+At the end of the detection the detectors return a \texttt{TowerRank} object.
+
+
+
+
+\section{Implementation details}
+\section{Limitations and future work}
+
+
+
+%% References
+%%
+%% Following citation commands can be used in the body text:
+%% Usage of \cite is as follows:
+%%   \cite{key}         ==>>  [#]
+%%   \cite[chap. 2]{key} ==>> [#, chap. 2]
+%%
+%% References with bibTeX database:
+
+\bibliographystyle{elsarticle-num}
+% % \bibliographystyle{elsarticle-harv}
+% % \bibliographystyle{elsarticle-num-names}
+% % \bibliographystyle{model1a-num-names}
+% % \bibliographystyle{model1b-num-names}
+% % \bibliographystyle{model1c-num-names}
+% % \bibliographystyle{model1-num-names}
+% % \bibliographystyle{model2-names}
+% % \bibliographystyle{model3a-num-names}
+% % \bibliographystyle{model3-num-names}
+% % \bibliographystyle{model4-names}
+% % \bibliographystyle{model5-names}
+% % \bibliographystyle{model6-num-names}
+\bibliography{sample}
+
+
+\end{document}
+
+%%
+%% End of file `elsarticle-template-num.tex'.
