@@ -98,13 +98,10 @@
 
 \author{Jan Kuipers}
 \address{j.h.kuipers@student.utwente.nl}
-\address{University of Twente}
 \author{David Stritzl}
 \address{david.stritzl@gmail.com}
-\address{University of Twente}
 \author{Santiago Aragón}
 \address{s.e.aragonramirez@student.utwente.nl}
-\address{University of Twente}
 \author{Iwan Timmer}
 \address{i.r.timmer@student.utwente.nl}
 \address{University of Twente}
@@ -125,11 +122,18 @@ This program tries to find nearby IMSI catchers using a RTL\_SDR device. TODO: D
 
 
 \section{Motivation and Outline}
+
 What is an IMSI Catcher
 Why to spoit it
 Possible approaches and difficculties
 Our approach
 Outline
+
+
+An IMSI Catcher (IC) is a device used to perform Man-in-the-Middle(MitM) attacks on cellular networks. The first IMSI catchers date from the 90's when this devices were almost exclusively affordable by law-enforcement agencies. However, the Software Define Radio (SDR) technological advances and the active open-source community have facilitated and cheapen the development of this devices and therefore making them available to a larger number of users (TODO: cite some examples Nohl, Paget etc). Furthermore, the lack of security in 2G, GSM nationwide deployments, and the backwards compatibility of almost every device in cellular networks gamble the privacy and security of our cellular communications.
+
+IC needs to mimic the behavior of a real Base Station Transceiver (BTS), while performing a MitM attack, thus an IC produce some artifacts over a BTS's normal herbivorous. This artifacts can be detected by an IMSI Catcher Catcher (ICC) directly on a end-user mobile phone or using the necessary hardware, e.g., SDR. This two settings provide different (dis)advantages
+
 \section{Design}
 
 \subsection{Detection methods}

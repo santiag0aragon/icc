@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2014) (preloaded format=pdflatex 2014.5.25)  15 JUN 2016 16:54
+This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2014) (preloaded format=pdflatex 2014.5.25)  15 JUN 2016 19:19
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -650,34 +650,33 @@ e
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
 \c@lstlisting=\count133
-LaTeX Font Info:    Try loading font information for U+msa on input line 116.
+LaTeX Font Info:    Try loading font information for U+msa on input line 113.
 (/usr/local/texlive/2014/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Try loading font information for U+msb on input line 116.
+LaTeX Font Info:    Try loading font information for U+msb on input line 113.
 
 (/usr/local/texlive/2014/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
 (/usr/local/texlive/2014/texmf-dist/tex/latex/listings/lstlang1.sty
 File: lstlang1.sty 2014/03/04 1.5c listings language file
-)
-LaTeX Font Info:    Try loading font information for OML+cmr on input line 141.
+) [1
+
+{/usr/local/texlive/2014/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
+LaTeX Font Info:    Try loading font information for OML+cmr on input line 150.
 
 
 (/usr/local/texlive/2014/texmf-dist/tex/latex/base/omlcmr.fd
 File: omlcmr.fd 1999/05/25 v2.5h Standard LaTeX font definitions
 )
 LaTeX Font Info:    Font shape `OML/cmr/m/n' in size <12> not available
-(Font)              Font shape `OML/cmm/m/it' tried instead on input line 141.
+(Font)              Font shape `OML/cmm/m/it' tried instead on input line 150.
 
-Overfull \hbox (4.34918pt too wide) in paragraph at lines 141--143
+Overfull \hbox (4.34918pt too wide) in paragraph at lines 150--152
 [][][][][][][][][][][][][][][][][][][][] 
  []
 
-[1
-
-{/usr/local/texlive/2014/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
 (./elsarticle-template.bbl
 
 Package natbib Warning: Empty `thebibliography' environment on input line 8.
@@ -686,11 +685,11 @@ Package natbib Warning: Empty `thebibliography' environment on input line 8.
 Here is how much of TeX's memory you used:
  7732 strings out of 493117
  105308 string characters out of 6135433
- 226523 words of memory out of 5000000
+ 228305 words of memory out of 5000000
  11068 multiletter control sequences out of 15000+600000
  10443 words of font info for 39 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 38i,6n,40p,291b,1717s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 38i,5n,40p,732b,1375s stack positions out of 5000i,500n,10000p,200000b,80000s
 </usr/local/texlive/2014/texmf-dist/fonts/ty
 pe1/public/amsfonts/cm/cmbx12.pfb></usr/local/texlive/2014/texmf-dist/fonts/typ
 e1/public/amsfonts/cm/cmmi12.pfb></usr/local/texlive/2014/texmf-dist/fonts/type
@@ -699,7 +698,7 @@ public/amsfonts/cm/cmr17.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/pu
 blic/amsfonts/cm/cmti10.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/pub
 lic/amsfonts/cm/cmti12.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/publ
 ic/amsfonts/cm/cmtt12.pfb>
-Output written on elsarticle-template.pdf (2 pages, 81280 bytes).
+Output written on elsarticle-template.pdf (2 pages, 83595 bytes).
 PDF statistics:
  39 PDF objects out of 1000 (max. 8388607)
  27 compressed objects within 1 object stream

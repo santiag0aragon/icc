@@ -150,10 +150,10 @@ INPUT /usr/local/texlive/2014/texmf-dist/fonts/tfm/public/cm/cmti10.tfm
 INPUT /usr/local/texlive/2014/texmf-dist/fonts/tfm/public/cm/cmti12.tfm
 INPUT /usr/local/texlive/2014/texmf-dist/tex/latex/listings/lstlang1.sty
 INPUT /usr/local/texlive/2014/texmf-dist/tex/latex/listings/lstlang1.sty
-INPUT /usr/local/texlive/2014/texmf-dist/tex/latex/base/omlcmr.fd
-INPUT /usr/local/texlive/2014/texmf-dist/tex/latex/base/omlcmr.fd
 OUTPUT elsarticle-template.pdf
 INPUT /usr/local/texlive/2014/texmf-var/fonts/map/pdftex/updmap/pdftex.map
+INPUT /usr/local/texlive/2014/texmf-dist/tex/latex/base/omlcmr.fd
+INPUT /usr/local/texlive/2014/texmf-dist/tex/latex/base/omlcmr.fd
 INPUT /usr/local/texlive/2014/texmf-dist/fonts/tfm/public/cm/cmtt12.tfm
 INPUT elsarticle-template.bbl
 INPUT elsarticle-template.bbl
