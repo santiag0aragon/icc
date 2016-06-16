@@ -31,6 +31,7 @@ from detectors.detector import Detector
 from detectors.a5_detector import A5Detector
 from detectors.id_request_detector import IDRequestDetector
 from detectors.cell_reselection_offset import CellReselectionOffsetDetector
+from detectors.cell_reselection_hysteresis import CellReselectionHysteresisDetector
 from cellinfochecks import TowerRank
 from icc.file_analyzer import FileAnalyzer
 
@@ -144,6 +145,7 @@ class Runner():
             detector_man.addDetector(A5Detector('a5_detector', cellobs_id))
             detector_man.addDetector(IDRequestDetector('id_request_detector', cellobs_id))
             detector_man.addDetector(CellReselectionOffsetDetector('cell_reselection_offset_detector', cellobs_id))
+            detector_man.addDetector(CellReselectionHysteresisDetector('cell_reselection_offset_hysteresis', cellobs_id))
             proc = Thread(target=detector_man.start)
             proc.start()
             if mute:
