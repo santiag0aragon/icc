@@ -14,9 +14,5 @@ class IDRequestDetector(Detector):
                     if id_type == 1:
                         print 'IMSI request detected'
                         self.counter += 1
-                        self.comment = 'IMSI request detected %s times' % self.counter
-                        self.update_s_rank(Detector.UNKNOWN)
-        else:
-            if self.comment is None:
-                    self.comment = 'No enough information found.'
-                    self.update_s_rank(Detector.UNKNOWN)
+                        self.update_rank(Detector.UNKNOWN, 'IMSI request detected %s times' % self.counter)
+

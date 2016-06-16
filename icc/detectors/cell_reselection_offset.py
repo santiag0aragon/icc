@@ -13,11 +13,8 @@ class CellReselectionOffsetDetector(Detector):
             if sys_info3.selection_parameters_present == 1:
                 cell_reselection_offset = sys_info3.cell_reselection_offset * 2
                 if cell_reselection_offset <= cell_reselection_offset_lower_threshold:
-                    self.update_s_rank(Detector.NOT_SUSPICIOUS)
-                    self.comment = "low (%d dB) cell reselection offset detected" % cell_reselection_offset
+                    self.update_rank(Detector.NOT_SUSPICIOUS, "low (%d dB) cell reselection offset detected" % cell_reselection_offset)
                 elif cell_reselection_offset <= cell_reselection_offset_upper_threshold:
-                    self.update_s_rank(Detector.UNKNOWN)
-                    self.comment = "medium (%d dB) cell reselection offset detected" % cell_reselection_offset
+                    self.update_rank(Detector.UNKNOWN, "medium (%d dB) cell reselection offset detected" % cell_reselection_offset)
                 else:
-                    self.update_s_rank(Detector.SUSPICIOUS)
-                    self.comment = "high (%d dB) cell reselection offset detected" % cell_reselection_offset
+                    self.update_rank(Detector.SUSPICIOUS, "high (%d dB) cell reselection offset detected" % cell_reselection_offset)

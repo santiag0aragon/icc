@@ -16,12 +16,14 @@ class Detector:
         """
         self.s_rank = 0
         self.name = name
-        self.comment = ""
+        self.comment = 'Not enough information found'
         self.cellobs_id = cellobs_id
         self.counter = 0
 
-    def update_s_rank(self, new_s_rank):
-        self.s_rank = new_s_rank if new_s_rank > self.s_rank else self.s_rank
+    def update_rank(self, new_s_rank, new_comment):
+        if new_s_rank > self.s_rank:
+            self.s_rank = new_s_rank
+            self.comment = new_comment
 
     def handle_packet(self, data):
         print ':'.join(x.encode('hex') for x in data)
