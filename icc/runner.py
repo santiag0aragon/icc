@@ -261,18 +261,19 @@ def offlineDetection(chan_mode, timeslot):
             continue
         selected_cts = selected_obs.celltowerscans[index3]
 
-
         udp_port = 2333
         detector_man = DetectorManager(udp_port=udp_port)
         #detector_man.addDetector(Detector('test_detector', cellobs_id))
         detector_man.addDetector(A5Detector('a5_detector', selected_obs.id))
         detector_man.addDetector(IDRequestDetector('id_request_detector', selected_obs.id))
         detector_man.addDetector(CellReselectionOffsetDetector('cell_reselection_offset_detector', selected_obs.id))
+        detector_man.addDetector(CellReselectionHysteresisDetector('cell_reselection_offset_hysteresis', selected_obs.id))
+
         proc = Thread(target=detector_man.start)
         proc.start()
 
         print "Selected file: {}".format(selected_cts.getCaptureFileName())
-        fa = FileAnalyzer(selected_cts.getCaptureFileName() +".cfile", cts.sample_rate, cts.cell_observation.arfcn, timeslot=timeslot, chan_mode=chan_mode, udp_port=udp_port, verbose=True)
+        fa = FileAnalyzer(selected_cts.getCaptureFileName() +".cfile", cts.sample_rate, cts.cell_observation.arfcn, max_timeslot=timeslot, chan_mode=chan_mode, udp_port=udp_port, verbose=True)
         fa.start()
         fa.wait()
         fa.stop()
