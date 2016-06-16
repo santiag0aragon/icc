@@ -21,7 +21,7 @@ class Detector:
         self.counter = 0
 
     def update_rank(self, new_s_rank, new_comment):
-        if new_s_rank > self.s_rank:
+        if new_s_rank >= self.s_rank:
             self.s_rank = new_s_rank
             self.comment = new_comment
 
