@@ -67,8 +67,13 @@ class BCCHCommon(Packet):
 
 class SystemInfoType3(Packet):
     name = "SystemInfoType3"
-    fields_desc = [XShortField("cell_ci", 0),
-                   X3BytesField("mcc_mnc", 0),
+    fields_desc = [XShortField("cid", 0),
+                   XBitField("mcc_1", 0, 4),
+                   XBitField("mcc_0", 0, 4),
+                   XBitField("mnc_0", 0, 4),
+                   XBitField("mcc_2", 0, 4),
+                   XBitField("mnc_2", 0, 4),
+                   XBitField("mnc_1", 0, 4),
                    XShortField("lac", 0),
                    X3BytesField("control_channel_description", 0),
                    XByteField("cell_options", 0),
@@ -78,6 +83,11 @@ class SystemInfoType3(Packet):
                    XBitField("selection_parameters_present", 0, 1),
                    XBitField("cbq", 0, 1),
                    XBitField("cell_reselection_offset", 0, 6)]
+
+    def post_dissection(self, s):
+        self.mcc = int(str(self.mcc_0) + str(self.mcc_1) + str(self.mcc_2))
+        self.mnc = int((str(self.mnc_0) if self.mnc_0 != 0xf else '') + str(self.mnc_1) + str(self.mnc_2))
+
     # rest of packet is left out]
 
 
