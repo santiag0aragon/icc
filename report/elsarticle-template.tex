@@ -158,7 +158,7 @@ Detections methods (DM) are defined as python scripts in detectors/some\_dector.
 
 This function will be applied packet wise and should rank the anylyzed BTS and at the end modify the \texttt{s\_rank} and \texttt{comment} variables calling \texttt{self.update\_s\_rank(RANK)}(resp. \texttt{self.comment='A descriptive comment'}).
 
-We define rank the suspiciones of a BTS as
+We define rank the suspiciousness of a BTS as
 \begin{lstlisting}
 
     SUSPICIOUS = 2
@@ -172,6 +172,7 @@ At the end of the detection the detectors return a \texttt{TowerRank} object.
 
 
 \section{Implementation details}
+\section{Tests and results}
 \section{Limitations and future work}
 
 
