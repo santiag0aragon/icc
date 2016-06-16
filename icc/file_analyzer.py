@@ -19,7 +19,7 @@ Block that reads a capture file.
 
 class FileAnalyzer(gr.top_block):
 
-    def __init__(self, filename, samp_rate, arfcn, chan_mode='BCCH', udp_port=4000, timeslot=0, verbose=True, args="", connectToSelf=False):
+    def __init__(self, filename, samp_rate, arfcn, chan_mode='BCCH', udp_port=4000, max_timeslot=0, verbose=True, args="", connectToSelf=False):
         """
         """
 
@@ -40,7 +40,7 @@ class FileAnalyzer(gr.top_block):
         self.udp_port = udp_port
         self.verbose = verbose
         self.cfile = filename.encode('utf-8')
-        self.timeslot = timeslot
+        self.max_timeslot = max_timeslot
         self.chan_mode = chan_mode
 
         ##################################################
@@ -58,19 +58,16 @@ class FileAnalyzer(gr.top_block):
         self.bursts_printer = grgsm.bursts_printer(pmt.intern(""), True, True, True, True)
 
         self.timeslot_filters = []
-        for i in range(0, self.timeslot + 1):
+        for i in range(0, self.max_timeslot + 1):
             self.timeslot_filters.append(grgsm.burst_timeslot_filter(i))
 
         self.dummy_burst_filters = []
-        for i in range(0, self.timeslot + 1):
+        for i in range(0, self.max_timeslot + 1):
             self.dummy_burst_filters.append(grgsm.dummy_burst_filter())
-
-        #self.timeslot_filter = grgsm.burst_timeslot_filter(self.timeslot)
-        #self.dummy_burst_filter = grgsm.dummy_burst_filter()
 
         self.other_demappers = []
         #Control channel demapper for timeslot 0
-        self.control_demapper = grgsm.universal_ctrl_chans_demapper(0, ([2,6,12,16,22,26,32,36,42,46]), ([1,2,2,2,2,2,2,2,2,2]))
+        self.control_demapper = grgsm.gsm_bcch_ccch_demapper(0)
 
         #Demapping other timeslots than 0 to BCCH does not really make sense
         # if self.chan_mode == 'BCCH':
@@ -81,28 +78,24 @@ class FileAnalyzer(gr.top_block):
         #     #This is for a newer version of grgsm
         #     #self.bcch_demapper = grgsm.gsm_bcch_ccch_demapper(self.timeslot)
         if self.chan_mode == 'BCCH_SDCCH4':
-            for i in range(1, self.timeslot + 1):
-                self.other_demappers.append(grgsm.universal_ctrl_chans_demapper(self.timeslot,
-                                                                            ([2, 6, 12, 16, 22, 26, 32, 36, 42, 46]),
-                                                                            ([1, 2, 2, 2, 7, 7, 7, 7, 135, 135])))
-            #self.bcch_sdcch4_demapper = grgsm.gsm_bcch_ccch_sdcch4_demapper(self.timeslot)
-        elif self.chan_mode == 'SDCCH8':
-            for i in range(1, self.timeslot + 1):
-                self.other_demappers.append(grgsm.universal_ctrl_chans_demapper(i, ([0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44]), ([8, 8, 8, 8, 8, 8, 8, 8, 136, 136, 136, 136])))
-            #self.sdcch8_demapper = grgsm.universal_ctrl_chans_demapper(self.timeslot, ([0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44]), ([8, 8, 8, 8, 8, 8, 8, 8, 136, 136, 136, 136]))
-            #This is for a newer version of grgsm
-            #self.sdcch8_demapper = grgsm.gsm_sdcch8_demapper(self.timeslot)
-        else:
-            for i in range(1, self.timeslot + 1):
-                self.other_demappers.append(grgsm.universal_ctrl_chans_demapper(i, ([0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44]), ([8, 8, 8, 8, 8, 8, 8, 8, 136, 136, 136, 136])))
+            for i in range(1, self.max_timeslot + 1):
+                self.other_demappers.append(grgsm.gsm_sdcch4_demapper(i))
 
-        #TODO add demappers for all timeslots
-        #self.sdcch8_demapper = grgsm.universal_ctrl_chans_demapper(self.timeslot, ([0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44]), ([8, 8, 8, 8, 8, 8, 8, 8, 136, 136, 136, 136]))
+        elif self.chan_mode == 'SDCCH8':
+            for i in range(1, self.max_timeslot + 1):
+                #self.other_demappers.append(grgsm.universal_ctrl_chans_demapper(i, ([0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44]), ([8, 8, 8, 8, 8, 8, 8, 8, 136, 136, 136, 136])))
+                self.other_demappers.append(grgsm.gsm_sdcch8_demapper(i))
+            #
+        else:
+            #Defaults to SDCCH8
+            for i in range(1, self.max_timeslot + 1):
+                #self.other_demappers.append(grgsm.universal_ctrl_chans_demapper(i, ([0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44]), ([8, 8, 8, 8, 8, 8, 8, 8, 136, 136, 136, 136])))
+                self.other_demappers.append(grgsm.gsm_sdcch8_demapper(i))
 
         self.decoders = []
-        for i in range(0, self.timeslot + 1):
+        for i in range(0, self.max_timeslot + 1):
             self.decoders.append(grgsm.control_channels_decoder())
-        #self.cch_decoder = grgsm.control_channels_decoder()
+
 
         #Server socket
         if connectToSelf:
@@ -147,7 +140,7 @@ class FileAnalyzer(gr.top_block):
 
 
         #Connect the demappers and decoders for the other timeslots
-        for i in range(1, self.timeslot + 1):
+        for i in range(1, self.max_timeslot + 1):
             self.msg_connect(self.receiver, "C0", self.other_demappers[i-1], "bursts")
             #self.msg_connect(self.timeslot_filters[i], "out", self.other_demappers[i - 1], "bursts")
             self.msg_connect(self.other_demappers[i - 1], "bursts", self.decoders[i], "bursts")

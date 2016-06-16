@@ -70,11 +70,13 @@ def neighbours(found_list):
         if len(mesh.find_edges_from(vertex)) == 0:  # TODO: can be 0 due to inconsistent tower scan
             rank = 2
             comment = "Cell '%s' has no neighbours" % vertex
-        if rank < 2 and len(mesh.find_edges_to(vertex)) == 0:
+        elif len(mesh.find_edges_to(vertex)) == 0:
             rank = 2
             comment = "Cell '%s' is not referenced in the network" % vertex
-        if rank < 1 and mesh.find_submesh(vertex).size() < min_submash_size:
+        elif mesh.find_submesh(vertex).size() < min_submash_size:
             rank = 1
             comment = "Cell only has few neighbours"
+        else:
+            comment = "Cell has neighbours and is referenced in the network"
         ranks.append(TowerRank(rank, 'neighbours', comment, info_map[vertex].cellobservation_id))
     return ranks
