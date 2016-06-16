@@ -104,25 +104,36 @@ The output of a detector is a **TowerRank** object.
 TODO: output of analysis and detection
 
 ### Consistency checks
-
 To verify the information received by **icc**, we use the database (DB) provided by [OpenCellID](http://wiki.opencellid.org/wiki/What_is_OpenCellID), a collaborative community project that collects cell tower information, e.g., LAC, MCC, MNC, geolocation, etc.
+
 #### Neighbor consistency. ```cellinfochecks/neighbours.py```
 Neighbor cell broadcasted information is verified against the DB and the others cells detected in the surroundings. It is also verified that the BTS announces a valid neighbor list, i.e. a non empty list. Furthermore, the BTS should also appear in other neighbor lists.
+
 #### Tower information consistency and BTS expected location. ```cellinfochecks/tic.py```
 Every detected BTS is verified against the DB where MCC, MNC, CID are checked. Furthermore, if the current geolocation (LAT, LON) is provided, it is verified if the BTS is broadcasting in the expected location, i.e. the measurement is taken within a valid transmission range.
 
 
 ### Packet based Detectors
 Used to examine every packet forwarded by the analyzer.
-#### Encryption algorithm detection. A5/X
 
+#### Encryption algorithm detection. A5/X
 **CipherModeCommand** packets are parsed and scanned for the encryption algorithm used to secure the communication.
 + A5/0 No encryption
 + A5/1 Broken algorithm
 + A5/2 Weakened algorithm to fulfill exportation regulation
 + A5/3 Updated algorithm for 3G
 
-#### Cell reselection offset. C2_OFFSET
+#### Cell reselection offset.
+In order to evaluate the quality of a BTS during the cell reselection process a C2 parameter is calculated for each cell. The MS will switch to a a different BTS if the C2 value of that cell is higher than the C2 value of the current BTS. The C2 value incorporates the cell reselection offset of a BTS, which is an offset, from 0 - 126 dB, to the measured quality by the MS. For higher cell reselection offset values, the MS will be more likely to select a BTS and stay at that BTS. The recommended value for the cell reselection offset is 0 dB, therefore most values above that are suspicious:
++ 0 dB: not suspicious
++ 1 - 25 dB: somewhat suspicious
++ 26 - 126 dB: very suspicious
+
+#### Cell reselection hysteresis.
+To prevent constant switching of BTSs with a similar C2 value, an additional C2 offset parameter between 0 and 14 dB, the cell reselection hysteresis, is used. The cell reselection hysteresis is added to the C2 value of the current BTS when comparing it to the C2 values of different BTSs, so the C2 value of another BTS has to be higher for a longer period in order to switch. The recommended value for the cell reselection hysteresis is 6 dB, therefore most values above that are suspicious
++ 0-6 dB: not suspicious
++ 7 - 9 dB: somewhat suspicious
++ 10 - 14 dB: very suspicious
 
 #### Identity request detector.
 
