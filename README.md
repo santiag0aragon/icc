@@ -66,6 +66,7 @@ The project depends on the following python libraries:
   + -u, --unmute                if the analyze option is specified, unmutes the
                               output during analysis which will show the
                               output of your capture device when it starts
+  + -S, --no-store              skip storing all received data to the hard drive
   + --help                      Show this message and exit.
 
 ## Detection methods
@@ -123,8 +124,9 @@ To verify the information received by **icc**, we use the database (DB) provided
 Neighbor cell broadcasted information is verified against the DB and the others cells detected in the surroundings. It is also verified that the BTS announces a valid neighbor list, i.e. a non empty list. Furthermore, the BTS should also appear in other neighbor lists.
 
 #### Tower information consistency and BTS expected location. ```cellinfochecks/tic.py```
-Every detected BTS is verified against the DB where MCC, MNC, CID are checked. Furthermore, if the current geolocation (LAT, LON) is provided, it is verified if the BTS is broadcasting in the expected location, i.e. the measurement is taken within a valid transmission range.
-
+Every detected BTS is verified against the DB where MCC, MNC, CID and LAC are checked on existence. Furthermore, if the current geolocation (LAT, LON) is provided, it is verified if the BTS is broadcasting in the expected location, i.e. the measurement is taken within a valid transmission range. Also the range the tower is broadcasting is taken into account and is retrieved from the db and a small difference is allowed. 
+#### LAC consistency check
+For all the towers is checked if they broadcast a consistent area code. BTS are flagged if they sent a uncommon area code for the specific provider.
 
 ### Packet based Detectors
 Used to examine every packet forwarded by the analyzer.
