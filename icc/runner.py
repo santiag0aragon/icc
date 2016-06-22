@@ -33,7 +33,6 @@ from detectors.a5_detector import A5Detector
 from detectors.id_request_detector import IDRequestDetector
 from detectors.cell_reselection_offset import CellReselectionOffsetDetector
 from detectors.cell_reselection_hysteresis import CellReselectionHysteresisDetector
-from detectors.tic import TIC
 from cellinfochecks import TowerRank
 from icc.file_analyzer import FileAnalyzer
 
@@ -110,7 +109,7 @@ class Runner():
                 index = click.prompt('Enter the index of the cell tower you want to scan', type=int)
                 rec_time = click.prompt('Enter the scan duration in seconds', type=int)
                 self.rec_time_sec = rec_time
-                s_ranks = self.analyze(co_list[index], detection=detection, lat=lat, lon=lon)
+                s_ranks = self.analyze(co_list[index], detection=detection)
 ################# PRINTING RANK
                 obs_ranks = {}
                 for s in s_ranks:
@@ -131,7 +130,7 @@ class Runner():
         ranks = tic(channel_infos,lat,lon) + lac(channel_infos) + neighbours(channel_infos)
         return ranks
 
-    def analyze(self, cell_obs, detection=True, mute=True, lat=None, lon=None):
+    def analyze(self, cell_obs, detection=True, mute=True):
         print "analyzing"
         cellobs_id = cell_obs.id
         s_ranks = []
@@ -148,7 +147,6 @@ class Runner():
             detector_man.addDetector(IDRequestDetector('id_request_detector', cellobs_id))
             detector_man.addDetector(CellReselectionOffsetDetector('cell_reselection_offset_detector', cellobs_id))
             detector_man.addDetector(CellReselectionHysteresisDetector('cell_reselection_offset_hysteresis', cellobs_id))
-            detector_man.addDetector(TIC('tic', cellobs_id, lat, lon))
             proc = Thread(target=detector_man.start)
             proc.start()
             if mute:
@@ -271,7 +269,6 @@ def offlineDetection(chan_mode, timeslot):
         detector_man.addDetector(IDRequestDetector('id_request_detector', selected_obs.id))
         detector_man.addDetector(CellReselectionOffsetDetector('cell_reselection_offset_detector', selected_obs.id))
         detector_man.addDetector(CellReselectionHysteresisDetector('cell_reselection_offset_hysteresis', selected_obs.id))
-        detector_man.addDetector(TIC('tic', selected_obs.id, current_scan.latitude, current_scan.longitude))
 
         proc = Thread(target=detector_man.start)
         proc.start()
