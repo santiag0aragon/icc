@@ -1,6 +1,6 @@
 class ChannelInfo(object):
 
-    def __init__(self, arfcn, freq, cid, lac, mcc, mnc, ccch_conf, power, neighbours, cell_arfcns):
+    def __init__(self, arfcn, freq, cid, lac, mcc, mnc, ccch_conf, power, neighbours, cell_arfcns, cellobservation_id = None):
         self.arfcn = arfcn
         self.freq = freq
         self.cid = cid
@@ -11,7 +11,7 @@ class ChannelInfo(object):
         self.power = power
         self.neighbours = neighbours
         self.cell_arfcns = cell_arfcns
-        self.cellobservation_id = None
+        self.cellobservation_id = cellobservation_id
 
     def get_verbose_info(self):
         i = "  |---- Configuration: %s\n" % self.get_ccch_conf()

@@ -22,6 +22,7 @@ from sqlalchemy import desc
 
 from database import *
 from models import *
+from aux import *
 from analyzer import Analyzer
 from detector_manager import DetectorManager
 from scanner import scan as sscan
@@ -288,6 +289,11 @@ def offlineDetection(chan_mode, timeslot):
 
         #proc.terminate()
         print "detector stopped"
+
+        if not (current_scan.latitude is None or current_scan.longitude is None):
+            print "Performing offline checks..."
+            found = [ChannelInfo(cell.arfcn, cell.freq, cell.cid, cell.lac, cell.mcc, cell.mnc, [], cell.power, [], [], cellobservation_id=cell.id) for cell in current_scan.cell_observations]
+            s_ranks += tic(found, current_scan.latitude, current_scan.longitude) + lac(found) + neighbours(found)
 
         #print s_ranks
         obs_ranks = {}
