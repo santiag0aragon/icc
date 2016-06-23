@@ -265,16 +265,16 @@ def offlineDetection(chan_mode, timeslot):
                 continue
             selected_cts = selected_obs.celltowerscans[index3]
             
-            s_ranks = run_detector(current_scan, selected_obs, selected_cts, chan_mode, timeslot)
+            s_ranks = run_detector(current_scan, selected_obs, [selected_cts], chan_mode, timeslot)
             print_ranks(s_ranks, [selected_obs])
         else:
             s_ranks = []
             for co in co_list:
-                for cts in co.celltowerscans:
-                    s_ranks += run_detector(current_scan, co, cts, chan_mode, timeslot)
+                s_ranks += run_detector(current_scan, co, co.celltowerscans, chan_mode, timeslot)
+
             print_ranks(s_ranks, co_list)
 
-def run_detector(current_scan, selected_obs, selected_cts, chan_mode, timeslot):
+def run_detector(current_scan, selected_obs, selected_ctss, chan_mode, timeslot):
     udp_port = 2333
     detector_man = DetectorManager(udp_port=udp_port)
     #detector_man.addDetector(Detector('test_detector', cellobs_id))
@@ -287,12 +287,14 @@ def run_detector(current_scan, selected_obs, selected_cts, chan_mode, timeslot):
     proc = Thread(target=detector_man.start)
     proc.start()
 
-    print "Selected file: {}".format(selected_cts.getCaptureFileName())
-    fa = FileAnalyzer(selected_cts.getCaptureFileName() +".cfile", selected_cts.sample_rate, selected_cts.cell_observation.arfcn, max_timeslot=timeslot, chan_mode=chan_mode, udp_port=udp_port, verbose=True)
-    fa.start()
-    fa.wait()
-    fa.stop()
-    print "analyzer stopped"
+    for selected_cts in selected_ctss:
+        print "Selected file: {}".format(selected_cts.getCaptureFileName())
+        fa = FileAnalyzer(selected_cts.getCaptureFileName() +".cfile", selected_cts.sample_rate, selected_cts.cell_observation.arfcn, max_timeslot=timeslot, chan_mode=chan_mode, udp_port=udp_port, verbose=True)
+        fa.start()
+        fa.wait()
+        fa.stop()
+        print "analyzer stopped"
+
     s_ranks = detector_man.stop()
     print "detector stopping..."
 
