@@ -289,7 +289,7 @@ def offlineDetection(chan_mode, timeslot):
 
         if not (current_scan.latitude is None or current_scan.longitude is None):
             print "Performing offline checks..."
-            found = [ChannelInfo(cell.arfcn, cell.freq, cell.cid, cell.lac, cell.mcc, cell.mnc, [], cell.power, [], [], cellobservation_id=cell.id) for cell in current_scan.cell_observations]
+            found = [ChannelInfo(cell.arfcn, cell.freq, cell.cid, cell.lac, cell.mcc, cell.mnc, [], cell.power, map(int, cell.neighbour_list.split()), [], cellobservation_id=cell.id) for cell in current_scan.cell_observations]
             s_ranks += tic(found, current_scan.latitude, current_scan.longitude) + lac(found) + neighbours(found)
 
         #print s_ranks
