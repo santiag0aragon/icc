@@ -313,6 +313,9 @@ def print_ranks(s_ranks, observations):
         else:
             obs_ranks[s.cellobs_id] = [s]
     
+    for i, ranks in enumerate(observations):
+        observations[i].s_rank = sum([x.s_rank for x in obs_ranks])
+
     co_list = sorted(observations, lambda x,y: x.s_rank - y.s_rank, reverse=True)
     
     for i, selected_obs in enumerate(co_list):
