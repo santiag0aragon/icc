@@ -53,7 +53,9 @@ class Runner():
 
         random.shuffle(found)
         for ch in found:
-            cellobs = CellObservation(freq=ch.freq, lac=ch.lac, mnc=ch.mnc, mcc=ch.mcc, arfcn=ch.arfcn, cid=ch.cid, scan_id=self.scan_id, power=ch.power)
+            cellobs = CellObservation(freq=ch.freq, lac=ch.lac, mnc=ch.mnc, mcc=ch.mcc, arfcn=ch.arfcn, cid=ch.cid, scan_id=self.scan_id, power=ch.power, neighbour_list = ",".join(map(str, ch.neighbours)))
+
+
             db_session.add(cellobs)
             db_session.commit()
             ch.cellobservation_id = cellobs.id
@@ -84,7 +86,7 @@ class Runner():
         co_list = sorted(scan_obj.cell_observations, lambda x,y: x.s_rank - y.s_rank, reverse=True)
         #print the cell observation, and ask if a longer scan on one of the towers should be performed
         for index, co in enumerate(co_list):
-            print "#{} | Rank: {} | ARFCN: {} | Freq: {} | LAC: {} | MCC: {} | MNC: {} | Power: {}".format(index, co.s_rank, co.arfcn, co.freq, co.lac, co.mcc, co.mnc, co.power)
+            print "#{} | Rank: {} | ARFCN: {} | Freq: {} | LAC: {} | MCC: {} | MNC: {} | Neigbours: {}, Power: {}".format(index, co.s_rank, co.arfcn, co.freq, co.lac, co.mcc, co.mnc, co.neighbour_list, co.power)
             if co.id in obs_ranks:
                 for tr in obs_ranks[co.id]:
                     print "--- Detector: {} | Rank: {} | Comment: {}".format(tr.detector, tr.s_rank, tr.comment)
