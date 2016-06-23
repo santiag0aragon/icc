@@ -253,49 +253,67 @@ def offlineDetection(chan_mode, timeslot):
             print("The selected scan does not have any stored capture files in the database. Try another scan.")
             continue
         index2 = click.prompt('Enter the index of the cell tower observation', type=int)
-        if not(index2 >= 0 and index2 < len(co_list)):
+        if not(index2 >= -1 and index2 < len(co_list)):
             print "Invalid cell tower observation index specified."
             continue
-        selected_obs = co_list[index2]
-        index3 = click.prompt('Enter the index of the cell tower scan', type=int)
-        if not (index3 >= 0 and index3 < len(selected_obs.celltowerscans)):
-            print "Invalid tower scan index specified."
-            continue
-        selected_cts = selected_obs.celltowerscans[index3]
+        
+        if index2 >= 0:
+            selected_obs = co_list[index2]
+            index3 = click.prompt('Enter the index of the cell tower scan', type=int)
+            if not (index3 >= 0 and index3 < len(selected_obs.celltowerscans)):
+                print "Invalid tower scan index specified."
+                continue
+            selected_cts = selected_obs.celltowerscans[index3]
+            
+            s_ranks = run_detector(current_scan, selected_obs, selected_cts, chan_mode, timeslot)
+            print_ranks(s_ranks, [selected_obs])
+        else:
+            s_ranks = []
+            for co in co_list:
+                for cts in co.celltowerscans:
+                    s_ranks += run_detector(current_scan, co, cts, chan_mode, timeslot)
+            print_ranks(s_ranks, co_list)
 
-        udp_port = 2333
-        detector_man = DetectorManager(udp_port=udp_port)
-        #detector_man.addDetector(Detector('test_detector', cellobs_id))
-        detector_man.addDetector(A5Detector('a5_detector', selected_obs.id))
-        detector_man.addDetector(IDRequestDetector('id_request_detector', selected_obs.id))
-        detector_man.addDetector(CellReselectionOffsetDetector('cell_reselection_offset_detector', selected_obs.id))
-        detector_man.addDetector(CellReselectionHysteresisDetector('cell_reselection_offset_hysteresis', selected_obs.id))
-        detector_man.addDetector(TIC('tic', selected_obs.id, current_scan.latitude, current_scan.longitude))
+def run_detector(current_scan, selected_obs, selected_cts, chan_mode, timeslot):
+    udp_port = 2333
+    detector_man = DetectorManager(udp_port=udp_port)
+    #detector_man.addDetector(Detector('test_detector', cellobs_id))
+    detector_man.addDetector(A5Detector('a5_detector', selected_obs.id))
+    detector_man.addDetector(IDRequestDetector('id_request_detector', selected_obs.id))
+    detector_man.addDetector(CellReselectionOffsetDetector('cell_reselection_offset_detector', selected_obs.id))
+    detector_man.addDetector(CellReselectionHysteresisDetector('cell_reselection_offset_hysteresis', selected_obs.id))
+    detector_man.addDetector(TIC('tic', selected_obs.id, current_scan.latitude, current_scan.longitude))
 
-        proc = Thread(target=detector_man.start)
-        proc.start()
+    proc = Thread(target=detector_man.start)
+    proc.start()
 
-        print "Selected file: {}".format(selected_cts.getCaptureFileName())
-        fa = FileAnalyzer(selected_cts.getCaptureFileName() +".cfile", cts.sample_rate, cts.cell_observation.arfcn, max_timeslot=timeslot, chan_mode=chan_mode, udp_port=udp_port, verbose=True)
-        fa.start()
-        fa.wait()
-        fa.stop()
-        print "analyzer stopped"
-        s_ranks = detector_man.stop()
-        print "detector stopping..."
+    print "Selected file: {}".format(selected_cts.getCaptureFileName())
+    fa = FileAnalyzer(selected_cts.getCaptureFileName() +".cfile", selected_cts.sample_rate, selected_cts.cell_observation.arfcn, max_timeslot=timeslot, chan_mode=chan_mode, udp_port=udp_port, verbose=True)
+    fa.start()
+    fa.wait()
+    fa.stop()
+    print "analyzer stopped"
+    s_ranks = detector_man.stop()
+    print "detector stopping..."
 
-        proc.join()
+    proc.join()
 
-        #proc.terminate()
-        print "detector stopped"
+    #proc.terminate()
+    print "detector stopped"
+    return s_ranks
 
-        #print s_ranks
-        obs_ranks = {}
-        for s in s_ranks:
-            if s.cellobs_id in obs_ranks:
-                obs_ranks[s.cellobs_id].append(s)
-            else:
-                obs_ranks[s.cellobs_id] = [s]
+def print_ranks(s_ranks, observations):
+    #print s_ranks
+    obs_ranks = {}
+    for s in s_ranks:
+        if s.cellobs_id in obs_ranks:
+            obs_ranks[s.cellobs_id].append(s)
+        else:
+            obs_ranks[s.cellobs_id] = [s]
+    
+    co_list = sorted(observations, lambda x,y: x.s_rank - y.s_rank, reverse=True)
+    
+    for i, selected_obs in enumerate(co_list):
         print "#{} | Rank: {} | ARFCN: {} | Freq: {} | LAC: {} | MCC: {} | MNC: {} | Power: {}".format(i, selected_obs.s_rank,
                                                                                                         selected_obs.arfcn, selected_obs.freq, selected_obs.lac,
                                                                                                         selected_obs.mcc, selected_obs.mnc, selected_obs.power)
